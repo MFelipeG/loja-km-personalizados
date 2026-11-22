@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart, ShieldCheck, Mail, FileText } from 'lucide-react';
-import { InstagramIcon, TikTokIcon } from './Icons';
+import { InstagramIcon, TikTokIcon, FacebookIcon } from './Icons';
 
 export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
   return (
@@ -65,6 +65,18 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                   title="Siga a KM Personalizados no TikTok"
                 >
                   <TikTokIcon className="w-4 h-4" />
+                </a>
+              )}
+
+              {settings?.facebook && (
+                <a
+                  href={settings.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-atelier-800 hover:bg-brand text-atelier-300 hover:text-white flex items-center justify-center transition-colors shadow-xs"
+                  title="Siga a KM Personalizados no Facebook"
+                >
+                  <FacebookIcon className="w-4 h-4" />
                 </a>
               )}
             </div>

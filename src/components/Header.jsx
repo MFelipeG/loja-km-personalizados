@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingBag, Search } from 'lucide-react';
-import { InstagramIcon, TikTokIcon } from './Icons';
+import { InstagramIcon, TikTokIcon, FacebookIcon } from './Icons';
 
 export default function Header({
   settings,
@@ -84,6 +84,18 @@ export default function Header({
               className="hidden sm:flex p-2 text-atelier-600 hover:text-brand hover:bg-atelier-100 rounded-full transition-colors"
             >
               <TikTokIcon className="w-4 h-4" />
+            </a>
+          )}
+
+          {settings?.facebook && (
+            <a
+              href={settings.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Facebook Oficial KM Personalizados"
+              className="hidden sm:flex p-2 text-atelier-600 hover:text-brand hover:bg-atelier-100 rounded-full transition-colors"
+            >
+              <FacebookIcon className="w-4 h-4" />
             </a>
           )}
 

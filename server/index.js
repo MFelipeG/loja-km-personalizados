@@ -37,6 +37,7 @@ const defaultDb = {
     email: 'kmpersonalisados@gmail.com',
     instagram: 'https://www.instagram.com/km_personalisado?jplx=NzlqdWsxdXljcWw=',
     tiktok: 'https://www.tiktok.com/@km_personalizado?_r=1&_t=ZG-9Bcw9tWOna4',
+    facebook: 'https://www.facebook.com/share/1CyF72n4wS/',
     productionDays: 2,
     shippingInfoText: 'Envios para todo Portugal Continental e Ilhas via CTT Correio Verde ou CTT Registado com rastreio, ou levantamento em cacifo InPost 24h. Embalagem reforçada anti-impacto para máxima proteção.',
     careInstructions: 'Limpe apenas com um pano macio e seco. Não utilize álcool ou produtos químicos abrasivos. Evite exposição direta e prolongada ao sol intenso.',
@@ -269,6 +270,9 @@ app.get('/api/settings', (req, res) => {
     email: db.settings.email || 'kmpersonalisados@gmail.com',
     instagram: db.settings.instagram,
     tiktok: db.settings.tiktok,
+    facebook: db.settings.facebook,
+    domain: db.settings.domain,
+    siteUrl: db.settings.siteUrl,
     productionDays: db.settings.productionDays,
     shippingInfoText: db.settings.shippingInfoText,
     careInstructions: db.settings.careInstructions,
@@ -285,6 +289,9 @@ app.put('/api/admin/settings', authAdmin, (req, res) => {
   const {
     whatsapp,
     email,
+    instagram,
+    tiktok,
+    facebook,
     productionDays,
     shippingInfoText,
     careInstructions,
@@ -297,6 +304,9 @@ app.put('/api/admin/settings', authAdmin, (req, res) => {
 
   if (whatsapp !== undefined) db.settings.whatsapp = sanitizeText(whatsapp);
   if (email !== undefined) db.settings.email = sanitizeText(email);
+  if (instagram !== undefined) db.settings.instagram = instagram.trim();
+  if (tiktok !== undefined) db.settings.tiktok = tiktok.trim();
+  if (facebook !== undefined) db.settings.facebook = facebook.trim();
   if (productionDays !== undefined) db.settings.productionDays = Number(productionDays) || 2;
   if (shippingInfoText !== undefined) db.settings.shippingInfoText = sanitizeText(shippingInfoText);
   if (careInstructions !== undefined) db.settings.careInstructions = sanitizeText(careInstructions);

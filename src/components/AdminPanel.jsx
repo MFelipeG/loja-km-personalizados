@@ -52,6 +52,9 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
   const [settingsForm, setSettingsForm] = useState({
     whatsapp: '',
     email: '',
+    instagram: '',
+    tiktok: '',
+    facebook: '',
     productionDays: 2,
     shippingInfoText: '',
     careInstructions: '',
@@ -114,6 +117,9 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
         setSettingsForm({
           whatsapp: data.whatsapp || '351965639401',
           email: data.email || 'kmpersonalisados@gmail.com',
+          instagram: data.instagram || '',
+          tiktok: data.tiktok || '',
+          facebook: data.facebook || '',
           productionDays: data.productionDays || 2,
           shippingInfoText: data.shippingInfoText || '',
           careInstructions: data.careInstructions || '',
@@ -768,6 +774,51 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                       onChange={(e) => setSettingsForm({ ...settingsForm, productionDays: parseInt(e.target.value, 10) })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
                     />
+                  </div>
+                </div>
+
+                {/* Redes Sociais */}
+                <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-3">
+                  <h5 className="font-bold text-brand-dark text-xs uppercase tracking-wider">
+                    Redes Sociais Oficiais
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-semibold text-atelier-700 text-xs mb-1">
+                        Instagram
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.instagram.com/..."
+                        value={settingsForm.instagram}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, instagram: e.target.value })}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-atelier-700 text-xs mb-1">
+                        TikTok
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.tiktok.com/..."
+                        value={settingsForm.tiktok}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, tiktok: e.target.value })}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-atelier-700 text-xs mb-1">
+                        Facebook
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.facebook.com/..."
+                        value={settingsForm.facebook}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, facebook: e.target.value })}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
                   </div>
                 </div>
 
