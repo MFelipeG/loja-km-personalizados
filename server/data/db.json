@@ -1,6 +1,8 @@
 {
   "settings": {
     "storeName": "KM Personalizados",
+    "domain": "kmpersonalisados.art",
+    "siteUrl": "https://kmpersonalisados.art",
     "country": "Portugal",
     "currency": "€",
     "whatsapp": "351965639401",

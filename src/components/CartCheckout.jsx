@@ -175,7 +175,7 @@ export default function CartCheckout({
         `🚚 *Envio:* ${order.shippingType} (${order.shippingFee.toFixed(2).replace('.', ',')} €)\n` +
         `💵 *TOTAL A PAGAR:* ${order.total.toFixed(2).replace('.', ',')} €\n\n` +
         `📍 *Morada de Entrega:* ${fullAddressStr}\n\n` +
-        `As minhas fotografias já ficaram salvas no site com o código ${order.code}! Gostaria de receber os dados para pagamento (MB WAY, Transferência Bancária ou Pix). Muito obrigado! 💖`;
+        `As minhas fotografias já ficaram salvas no site (https://kmpersonalisados.art) com o código ${order.code}! Gostaria de receber os dados para pagamento (MB WAY, Transferência Bancária ou Pix). Muito obrigado! 💖`;
 
       const encodedMsg = encodeURIComponent(msg);
       const waUrl = `https://wa.me/${waNumber}?text=${encodedMsg}`;

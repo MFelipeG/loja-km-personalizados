@@ -29,6 +29,8 @@ const dbPath = path.join(dataDir, 'db.json');
 const defaultDb = {
   settings: {
     storeName: 'KM Personalizados',
+    domain: 'kmpersonalisados.art',
+    siteUrl: 'https://kmpersonalisados.art',
     country: 'Portugal',
     currency: '€',
     whatsapp: '351965639401', // Official WhatsApp Portugal
@@ -177,8 +179,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "https://images.unsplash.com"],
-      connectSrc: ["'self'", "https://docs.google.com", "https://sheets.googleapis.com", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "https://images.unsplash.com", "https://kmpersonalisados.art"],
+      connectSrc: ["'self'", "https://kmpersonalisados.art", "https://docs.google.com", "https://sheets.googleapis.com", "data:", "blob:"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'none'"]
