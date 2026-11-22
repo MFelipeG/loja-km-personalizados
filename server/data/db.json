@@ -1,7 +1,10 @@
 {
   "settings": {
     "storeName": "KM Personalizados",
+    "country": "Portugal",
+    "currency": "€",
     "whatsapp": "351965639401",
+    "email": "kmpersonalisados@gmail.com",
     "instagram": "https://www.instagram.com/km_personalisado?jplx=NzlqdWsxdXljcWw=",
     "tiktok": "https://www.tiktok.com/@km_personalizado?_r=1&_t=ZG-9Bcw9tWOna4",
     "productionDays": 3,
@@ -55,33 +58,10 @@
         "description": "2 folhas A4 completas. Preço promocional em breve."
       }
     ],
-    "upcomingProducts": [
-      {
-        "id": "botons-redondos",
-        "title": "Bótons Redondos Clássicos",
-        "description": "O clássico bóton americano com alfinete de segurança e acabamento espelhado.",
-        "icon": "Circle"
-      },
-      {
-        "id": "chaveiros-acrilico",
-        "title": "Chaveiros Acrílicos Foto",
-        "description": "Chaveiros transparentes em acrílico resistente com sua foto frente e verso.",
-        "icon": "Key"
-      },
-      {
-        "id": "imas-polaroid",
-        "title": "Ímãs Estilo Polaroid Vintage",
-        "description": "Ímãs retangulares com borda branca retrô e legenda personalizada.",
-        "icon": "Camera"
-      }
-    ],
-    "email": "kmpersonalisados@gmail.com",
-    "currency": "€",
-    "country": "Portugal",
     "shippingMethods": [
       {
         "id": "ctt-verde",
-        "name": "CTT Correio Verde (Almofadada M)",
+        "name": "CTT Correio Verde (Almofadada)",
         "fee": 2.7,
         "days": 2,
         "desc": "Económico e rápido para Portugal Continental e Ilhas"
@@ -106,6 +86,26 @@
         "fee": 0,
         "days": 1,
         "desc": "Grátis - Combinar entrega local diretamente no WhatsApp"
+      }
+    ],
+    "upcomingProducts": [
+      {
+        "id": "botons-redondos",
+        "title": "Bótons Redondos Clássicos",
+        "description": "O clássico bóton americano com alfinete de segurança e acabamento espelhado.",
+        "icon": "Circle"
+      },
+      {
+        "id": "chaveiros-acrilico",
+        "title": "Chaveiros Acrílicos Foto",
+        "description": "Chaveiros transparentes em acrílico resistente com sua foto frente e verso.",
+        "icon": "Key"
+      },
+      {
+        "id": "imas-polaroid",
+        "title": "Ímãs Estilo Polaroid Vintage",
+        "description": "Ímãs retangulares com borda branca retrô e legenda personalizada.",
+        "icon": "Camera"
       }
     ]
   },
