@@ -166,8 +166,8 @@ export default function MockupStudio({
   };
 
   return (
-    <section id="estudio" className="py-16 md:py-24 bg-atelier-50 border-b border-atelier-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="estudio" className="py-16 md:py-24 bg-atelier-50 border-b border-atelier-200/80 w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">

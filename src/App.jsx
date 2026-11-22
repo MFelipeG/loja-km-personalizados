@@ -67,7 +67,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-atelier-50 text-atelier-900 font-sans">
+    <div className="min-h-screen flex flex-col bg-atelier-50 text-atelier-900 font-sans overflow-x-hidden w-full max-w-full">
       {/* Top Header */}
       <Header
         settings={settings}
@@ -79,7 +79,7 @@ export default function App() {
         onScrollToStudio={scrollToStudio}
       />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         {/* Hero Section */}
         <Hero
           onScrollToStudio={scrollToStudio}

@@ -12,24 +12,24 @@ export default function Header({
   onScrollToStudio
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-atelier-50/95 backdrop-blur-md border-b border-atelier-200/80 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-atelier-50/95 backdrop-blur-md border-b border-atelier-200/80 transition-all w-full max-w-full">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
         
         {/* Brand Logo & Name */}
-        <a href="#" className="flex items-center gap-3 group">
+        <a href="#" className="flex items-center gap-2 sm:gap-3 group shrink min-w-0">
           {/* Seamless rounded logo without white borders */}
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0 group-hover:scale-105 transition-transform border border-brand/15 shadow-xs">
+          <div className="relative w-10 h-10 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0 group-hover:scale-105 transition-transform border border-brand/15 shadow-xs">
             <img
               src="/assets/logo-km.jpg"
               alt="KM Personalizados"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="flex flex-col justify-center">
-            <span className="font-serif text-2xl sm:text-[26px] font-bold tracking-tight text-brand-dark block leading-tight">
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="font-serif text-lg sm:text-[26px] font-bold tracking-tight text-brand-dark block leading-tight truncate">
               KM Personalizados
             </span>
-            <span className="text-[11px] font-medium tracking-wider uppercase text-brand-leather block whitespace-nowrap">
+            <span className="text-[9px] sm:text-[11px] font-medium tracking-wider uppercase text-brand-leather hidden sm:block">
               Ateliê de Bótons & Ímãs de Fotos
             </span>
           </div>
@@ -61,7 +61,7 @@ export default function Header({
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Social Links */}
           {settings?.instagram && (
             <a
@@ -102,26 +102,27 @@ export default function Header({
           {/* Acompanhar Pedido */}
           <button
             onClick={onOpenTracking}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl transition-colors border border-atelier-200 cursor-pointer"
+            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl transition-colors border border-atelier-200 cursor-pointer shrink-0"
             title="Consulte o estado da sua encomenda"
           >
             <Search className="w-3.5 h-3.5 text-brand" />
-            <span className="hidden sm:inline">Acompanhar Encomenda</span>
-            <span className="sm:hidden">Rastrear</span>
+            <span className="hidden md:inline">Acompanhar</span>
           </button>
 
           {/* Cart / Sacola Button */}
           <button
             onClick={onOpenCart}
-            className="relative flex items-center gap-2 px-3.5 py-2.5 bg-brand text-atelier-50 hover:bg-brand-dark rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            className="relative flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-brand text-atelier-50 hover:bg-brand-dark rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shrink-0"
             title="Ver encomenda de bótons"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span className="text-xs sm:text-sm font-semibold">Minha Sacola</span>
-            {cartCount > 0 && (
-              <span className="bg-amber-400 text-brand-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center -mr-1">
+            <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Minha Sacola</span>
+            {cartCount > 0 ? (
+              <span className="bg-amber-400 text-brand-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center -mr-0.5">
                 {cartCount}
               </span>
+            ) : (
+              <span className="text-xs font-bold sm:hidden">0</span>
             )}
           </button>
         </div>

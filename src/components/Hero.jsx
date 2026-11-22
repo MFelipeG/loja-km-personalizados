@@ -17,21 +17,21 @@ export default function Hero({ onScrollToStudio, settings }) {
   };
 
   return (
-    <section className="relative overflow-hidden pt-8 pb-16 md:pt-12 md:pb-24 border-b border-atelier-200/60 bg-gradient-to-b from-atelier-50 via-atelier-100/40 to-atelier-50">
+    <section className="relative overflow-hidden w-full max-w-full pt-8 pb-16 md:pt-12 md:pb-24 border-b border-atelier-200/60 bg-gradient-to-b from-atelier-50 via-atelier-100/40 to-atelier-50">
       {/* Decorative ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-brand-light/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] h-[350px] bg-brand-light/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* Left Column: Headlines & Call to Action */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-atelier-200/80 border border-atelier-300/60 text-xs sm:text-sm font-semibold text-brand-leather">
-              <Sparkles className="w-4 h-4 text-amber-600" />
+              <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
               <span>Promoção de Inauguração: 5 Bótons por 25 € + 1 de Brinde!</span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15]">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15] break-words">
               As suas memórias mais queridas em <span className="text-brand italic font-normal">bótons ímãs</span> de alta qualidade.
             </h1>
 

@@ -7,8 +7,8 @@ export default function DeadlinesShipping({ settings }) {
   const careText = settings?.careInstructions || 'Limpe com pano macio e seco. Evite produtos químicos ou solventes.';
 
   return (
-    <section id="prazos" className="py-16 md:py-24 bg-atelier-50 border-b border-atelier-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="prazos" className="py-16 md:py-24 bg-atelier-50 border-b border-atelier-200/80 w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">

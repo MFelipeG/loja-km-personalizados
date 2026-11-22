@@ -20,8 +20,8 @@ export default function KitsPricing({ kits, onSelectKit, onCustomQuantity }) {
   const currentCustomPrice = calculateCustomPrice(customUnits);
 
   return (
-    <section id="kits" className="py-16 md:py-24 bg-atelier-100/60 border-b border-atelier-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="kits" className="py-16 md:py-24 bg-atelier-100/60 border-b border-atelier-200/80 w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Section Title */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">

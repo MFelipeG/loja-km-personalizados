@@ -29,8 +29,8 @@ export default function UpcomingProducts({ products }) {
   const items = products && products.length > 0 ? products : defaultProducts;
 
   return (
-    <section id="em-breve" className="py-16 md:py-20 bg-atelier-50/70 border-b border-atelier-200/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="em-breve" className="py-16 md:py-20 bg-atelier-50/70 border-b border-atelier-200/80 w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
