@@ -101,7 +101,7 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                   onClick={onOpenTerms}
                   className="hover:text-brand-light transition-colors text-left cursor-pointer"
                 >
-                  Termos & Política de Reembolso
+                  Termos, Cancelamento & Reembolso
                 </button>
               </li>
             </ul>

@@ -505,17 +505,20 @@ export default function CartCheckout({
                 <ArrowRight className="w-5 h-5" />
               </button>
 
-              <div className="text-[11px] text-center text-atelier-500 space-y-1">
+              <div className="text-[11px] text-center text-atelier-500 space-y-1.5 pt-1">
                 <p className="flex items-center justify-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>As suas fotografias são guardadas apenas até a encomenda ser entregue, sendo depois apagadas.</span>
+                </p>
+                <p className="text-[10px] text-atelier-400">
+                  * Artigos personalizados sob encomenda: em caso de desistência após o início da produção, será retido no mínimo 50% do valor para custos operacionais e de materiais.
                 </p>
                 {onOpenTerms && (
                   <button
                     onClick={onOpenTerms}
-                    className="text-brand hover:underline font-semibold cursor-pointer"
+                    className="text-brand hover:underline font-semibold cursor-pointer block mx-auto text-xs"
                   >
-                    Consulte os Termos de Uso e Política de Reembolso
+                    Consulte os Termos de Uso, Cancelamento & Reembolso
                   </button>
                 )}
               </div>

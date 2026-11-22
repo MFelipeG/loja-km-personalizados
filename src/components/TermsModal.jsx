@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ShieldCheck, RefreshCw, FileText, Lock, Mail, Phone, Heart } from 'lucide-react';
+import { X, ShieldCheck, RefreshCw, FileText, Lock, Mail, Phone, Heart, Truck } from 'lucide-react';
 
 export default function TermsModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -16,7 +16,7 @@ export default function TermsModal({ isOpen, onClose }) {
             </div>
             <div>
               <h3 className="font-serif font-bold text-lg text-brand-dark">
-                Termos, Privacidade & Reembolso
+                Termos, Privacidade, Reembolso & Cancelamento
               </h3>
               <p className="text-xs text-atelier-500">
                 Ateliê KM Personalizados • Portugal
@@ -52,14 +52,33 @@ export default function TermsModal({ isOpen, onClose }) {
             </p>
           </div>
 
-          {/* Section 2: Política de Reembolso e Trocas */}
+          {/* Section 2: Política de Cancelamento e Desistência */}
+          <div className="p-4 bg-rose-50/60 rounded-2xl border border-rose-200/70 space-y-2">
+            <h4 className="font-serif font-bold text-sm text-rose-900 flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-rose-700" />
+              <span>2. Política de Cancelamento e Desistência (Artigos Personalizados)</span>
+            </h4>
+            <p>
+              Por se tratarem de artigos confeccionados sob medida, impressos em papel fotográfico de alta resolução e montados de forma artesanal com as fotografias pessoais de cada cliente, vigoram as seguintes regras de desistência:
+            </p>
+            <ul className="list-disc pl-5 space-y-2 text-rose-950">
+              <li>
+                <strong>Cobrança Mínima de 50% em Caso de Desistência:</strong> Caso a encomenda seja confirmada e o cliente decida desistir ou cancelar a compra antes do envio, <strong>será cobrado / retido no mínimo 50% do valor total da encomenda</strong>. Este montante destina-se obrigatoriamente a cobrir os custos operacionais e o desperdício dos materiais gráficos já utilizados (papel fotográfico 300 DPI, laminação brilhante de proteção, chapas metálicas, películas e ímãs de alta aderência), que não podem ser reutilizados em outros pedidos.
+              </li>
+              <li>
+                <strong>Após a Expedição nos CTT:</strong> A partir do momento em que a encomenda já foi despachada e confiada aos CTT ou InPost, não é possível proceder ao cancelamento da encomenda nem à devolução de valores por motivo de desistência.
+              </li>
+            </ul>
+          </div>
+
+          {/* Section 3: Política de Reembolso e Trocas */}
           <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/70 space-y-2">
             <h4 className="font-serif font-bold text-sm text-amber-900 flex items-center gap-1.5">
               <RefreshCw className="w-4 h-4 text-amber-700" />
-              <span>2. Política de Reembolso e Garantia do Produto</span>
+              <span>3. Política de Garantia e Reembolso por Defeito</span>
             </h4>
             <p>
-              Por se tratarem de artigos 100% personalizados, feitos sob medida com fotografias de cariz pessoal, aplicam-se as seguintes condições de garantia:
+              Asseguramos total suporte em caso de anomalias no produto ou no transporte:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-amber-950">
               <li>
@@ -74,11 +93,11 @@ export default function TermsModal({ isOpen, onClose }) {
             </ul>
           </div>
 
-          {/* Section 3: Envios CTT e Prazos */}
+          {/* Section 4: Envios CTT e Prazos */}
           <div className="p-4 bg-atelier-50 rounded-2xl border border-atelier-200 space-y-2">
             <h4 className="font-serif font-bold text-sm text-brand-dark flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-brand" />
-              <span>3. Envios e Prazos (Portugal Continental & Ilhas)</span>
+              <Truck className="w-4 h-4 text-brand" />
+              <span>4. Envios e Prazos (Portugal Continental & Ilhas)</span>
             </h4>
             <p>
               • <strong>Produção Artesanal:</strong> Média de 1 a 2 dias úteis após a confirmação do pagamento no WhatsApp.
