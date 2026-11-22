@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   ShoppingBag,
@@ -11,7 +11,10 @@ import {
   MapPin,
   Phone,
   User,
-  ArrowRight
+  ArrowRight,
+  Gift,
+  Printer,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { saveOrderCode, clearDraftPhotos } from '../utils/storage';
@@ -21,146 +24,103 @@ export default function CartCheckout({
   onClose,
   items,
   targetKit,
-  settings
+  settings,
+  onOpenTerms
 }) {
   if (!isOpen) return null;
 
-  // Form states
+  // Form states (Portugal)
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [cep, setCep] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
+  const [concelho, setConcelho] = useState('');
+  const [district, setDistrict] = useState('');
   const [complement, setComplement] = useState('');
 
-  // Shipping calculation state
-  const [shippingLoading, setShippingLoading] = useState(false);
-  const [shippingResult, setShippingResult] = useState(null);
-  const [shippingError, setShippingError] = useState('');
+  // Shipping selection (CTT Portugal from Google Sheets)
+  const shippingMethods = settings?.shippingMethods || [
+    { id: 'ctt-verde', name: 'CTT Correio Verde (Almofadada)', fee: 2.70, days: 2, desc: 'Económico e rápido para todo o país' },
+    { id: 'ctt-registado', name: 'CTT Correio Registado (Com Rastreio)', fee: 3.20, days: 1, desc: 'Entrega segura em mão com rastreio oficial' },
+    { id: 'inpost-locker', name: 'InPost (Cacifo Automático 24h)', fee: 3.85, days: 3, desc: 'Levantamento no cacifo mais próximo' },
+    { id: 'levantamento-local', name: 'Levantamento em Mãos', fee: 0.00, days: 1, desc: 'Grátis - A combinar pelo WhatsApp' }
+  ];
+
+  const [selectedMethodId, setSelectedMethodId] = useState(shippingMethods[0]?.id || 'ctt-verde');
 
   // Order submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Compute pricing
+  // Compute pricing in Euro (€)
   const count = items.length;
-  const kits = settings?.kits || [];
 
-  // Match best price based on count or target kit
-  let subtotal = 0;
-  let matchedKitName = `${count} Unidades`;
+  // Pricing rules:
+  // Minimum 2 units = 12€ (6€/un)
+  // 3 units = 18€
+  // 4 units = 24€
+  // 5 or 6 units = 25€ (Promoção de Inauguração: 5 + 1 de brinde!)
+  // > 6 units = 25€ + (count - 6) * 5.00€
+  let subtotal = 12.00;
+  let matchedKitName = `${count} Bótons Ímãs`;
 
-  if (count === 1) {
-    subtotal = 6.00;
-    matchedKitName = 'Unidade Avulsa';
-  } else if (count <= 6) {
-    subtotal = 27.00;
-    matchedKitName = 'Kit 6 Unidades';
-  } else if (count <= 12) {
-    subtotal = 48.00;
-    matchedKitName = 'Kit 12 Unidades (Folha Inteira)';
-  } else if (count <= 24) {
-    subtotal = 89.00;
-    matchedKitName = 'Kit 24 Unidades (2 Folhas)';
+  if (count <= 2) {
+    subtotal = 12.00;
+    matchedKitName = 'Pedido Mínimo (2 Bótons)';
+  } else if (count === 3) {
+    subtotal = 18.00;
+    matchedKitName = '3 Bótons Ímãs';
+  } else if (count === 4) {
+    subtotal = 24.00;
+    matchedKitName = '4 Bótons Ímãs';
+  } else if (count === 5 || count === 6) {
+    subtotal = 25.00;
+    matchedKitName = 'Promoção de Inauguração (5 + 1 Grátis)';
   } else {
-    // 24 + additional
-    const extra = count - 24;
-    subtotal = 89.00 + extra * 3.70;
-    matchedKitName = `Kit Promocional ${count} Unidades`;
+    subtotal = 25.00 + (count - 6) * 5.00;
+    matchedKitName = `${count} Bótons Ímãs (Promoção Aplicada)`;
   }
 
-  const shippingFee = shippingResult ? shippingResult.fee : 0;
+  const selectedShipping = shippingMethods.find((m) => m.id === selectedMethodId) || shippingMethods[0];
+  const shippingFee = selectedShipping ? selectedShipping.fee : 2.70;
   const grandTotal = subtotal + shippingFee;
 
-  // Real-time Shipping Calculation (Google Sheets CSV via proxy or fallback)
-  const handleCalculateShipping = async () => {
-    const cleanCep = cep.replace(/\D/g, '');
-    if (cleanCep.length < 5 && !city) {
-      setShippingError('Digite o CEP ou Cidade para calcular o frete.');
-      return;
-    }
-
-    setShippingLoading(true);
-    setShippingError('');
-    try {
-      const params = new URLSearchParams();
-      if (cleanCep) params.append('cep', cleanCep);
-      if (city) params.append('city', city);
-      if (neighborhood) params.append('neighborhood', neighborhood);
-
-      const res = await fetch(`/api/shipping/calculate?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setShippingResult(data);
-      } else {
-        setShippingError('Não foi possível calcular o frete no momento.');
-      }
-    } catch (err) {
-      setShippingError('Erro de conexão ao buscar taxa de entrega.');
-    } finally {
-      setShippingLoading(false);
-    }
-  };
-
-  // Auto-search CEP via ViaCEP for autocomplete
-  const handleCepBlur = async () => {
-    const clean = cep.replace(/\D/g, '');
-    if (clean.length === 8) {
-      handleCalculateShipping();
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!data.erro) {
-            setStreet(data.logradouro || '');
-            setNeighborhood(data.bairro || '');
-            setCity(data.localidade || '');
-            setState(data.uf || '');
-          }
-        }
-      } catch {}
-    }
-  };
-
-  // Submit Order and Generate WhatsApp
+  // Submit Order and Launch WhatsApp with Welcome Message & #BOT-XXXX
   const handleFinishOrder = async () => {
     if (!customerName.trim()) {
-      alert('Por favor, informe seu nome.');
+      alert('Por favor, informe o seu nome.');
       return;
     }
     if (!customerPhone.trim()) {
-      alert('Por favor, informe seu telefone / WhatsApp para contato.');
+      alert('Por favor, informe o seu contacto telefónico / WhatsApp.');
       return;
     }
-    if (items.length === 0) {
-      alert('Adicione pelo menos uma foto ao pedido.');
+    if (items.length < 2) {
+      alert('O pedido mínimo é de 2 bótons ímãs.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Create order payload
       const payload = {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
-        kitId: targetKit?.id || 'custom',
+        kitId: targetKit?.id || 'personalizado',
         kitName: matchedKitName,
         quantity: items.length,
         subtotal,
         shippingFee,
-        shippingType: shippingResult?.region || 'Envio Padrão',
-        estimatedDays: shippingResult?.days || settings?.productionDays || 3,
+        shippingType: selectedShipping.name,
+        estimatedDays: selectedShipping.days,
+        currency: '€',
         address: {
-          cep: cep.trim(),
+          postalCode: postalCode.trim(),
           street: street.trim(),
           number: number.trim(),
-          neighborhood: neighborhood.trim(),
-          city: city.trim(),
-          state: state.trim(),
+          concelho: concelho.trim(),
+          district: district.trim(),
           complement: complement.trim()
         },
         items: items.map((it) => ({
@@ -183,7 +143,7 @@ export default function CartCheckout({
       });
 
       if (!res.ok) {
-        throw new Error('Falha ao salvar pedido no servidor.');
+        throw new Error('Falha ao registar encomenda no servidor.');
       }
 
       const data = await res.json();
@@ -194,30 +154,35 @@ export default function CartCheckout({
 
       // Trigger celebratory confetti effect
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 80,
         origin: { y: 0.6 }
       });
 
-      // Prepare WhatsApp URL
-      const waNumber = (settings?.whatsapp || '5541999999999').replace(/\D/g, '');
+      // Prepare official WhatsApp message with Welcome greeting and Order Code
+      const waNumber = (settings?.whatsapp || '351965639401').replace(/\D/g, '');
+      const fullAddressStr = street
+        ? `${street}, ${number || 'S/N'}${complement ? ` (${complement})` : ''} - ${postalCode || ''} ${concelho || ''}`
+        : 'A combinar no WhatsApp';
+
       const msg = `Olá KM Personalizados! ✨\n` +
-        `Gostaria de confirmar meu pedido de Bótons Ímãs Quadrados:\n\n` +
-        `📦 *Pedido:* ${order.code}\n` +
-        `👤 *Cliente:* ${order.customerName}\n` +
-        `🖼️ *Quantidade:* ${order.quantity} unidades (${order.kitName})\n` +
-        `💰 *Subtotal:* R$ ${order.subtotal.toFixed(2).replace('.', ',')}\n` +
-        `🚚 *Frete:* R$ ${order.shippingFee.toFixed(2).replace('.', ',')} (${order.shippingType} - Prazo estimado: ${order.estimatedDays} dias úteis)\n` +
-        `💵 *Total a Pagar:* R$ ${order.total.toFixed(2).replace('.', ',')}\n\n` +
-        `Minhas fotos já foram salvas e vinculadas ao código no site! Aguardo os dados para pagamento via Pix. 💖`;
+        `Acabei de montar o meu pedido no vosso site!\n\n` +
+        `📦 *NÚMERO DO PEDIDO:* ${order.code}\n` +
+        `👤 *Nome:* ${order.customerName}\n` +
+        `📱 *Contacto:* ${order.customerPhone}\n` +
+        `🖼️ *Quantidade:* ${order.quantity} Bótons Ímãs Quadrados (${order.kitName})\n` +
+        `💰 *Subtotal:* ${order.subtotal.toFixed(2).replace('.', ',')} €\n` +
+        `🚚 *Envio:* ${order.shippingType} (${order.shippingFee.toFixed(2).replace('.', ',')} €)\n` +
+        `💵 *TOTAL A PAGAR:* ${order.total.toFixed(2).replace('.', ',')} €\n\n` +
+        `📍 *Morada de Entrega:* ${fullAddressStr}\n\n` +
+        `As minhas fotografias já ficaram salvas no site com o código ${order.code}! Gostaria de receber os dados para pagamento (MB WAY, Transferência Bancária ou Pix). Muito obrigado! 💖`;
 
       const encodedMsg = encodeURIComponent(msg);
       const waUrl = `https://wa.me/${waNumber}?text=${encodedMsg}`;
 
-      // Open WhatsApp in new tab
       window.open(waUrl, '_blank');
     } catch (err) {
-      alert(`Erro ao finalizar pedido: ${err.message}`);
+      alert(`Erro ao finalizar encomenda: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -232,34 +197,34 @@ export default function CartCheckout({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-6">
         
         {/* Header */}
         <div className="px-6 py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-brand text-atelier-50 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-brand text-atelier-50 flex items-center justify-center shadow-xs">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-serif font-bold text-lg text-brand-dark">
-                {completedOrder ? 'Pedido Concluído!' : 'Minha Sacola de Bótons'}
+                {completedOrder ? 'Encomenda Registada!' : 'A Minha Sacola de Bótons'}
               </h3>
               <p className="text-xs text-atelier-500">
-                {completedOrder ? 'Código gerado com sucesso' : `${count} itens configurados`}
+                {completedOrder ? 'Código único gerado' : `${count} itens configurados • Portugal (€)`}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-atelier-400 hover:text-atelier-700 hover:bg-atelier-200/60 rounded-full transition-colors"
+            className="p-2 text-atelier-400 hover:text-atelier-700 hover:bg-atelier-200/60 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[82vh] overflow-y-auto">
           
           {completedOrder ? (
             /* =================== COMPLETED ORDER VIEW =================== */
@@ -269,14 +234,14 @@ export default function CartCheckout({
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                  Fotos Salvas com Segurança
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  Fotos Salvas em Alta Resolução
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-brand-dark">
-                  Seu Pedido foi Registrado!
+                  A sua Encomenda foi Registada!
                 </h3>
-                <p className="text-sm text-atelier-600 max-w-md mx-auto">
-                  Guarde o seu código único. Ele já está vinculado às suas fotos de alta resolução no ateliê da KM Personalizados:
+                <p className="text-xs sm:text-sm text-atelier-600 max-w-md mx-auto">
+                  Guarde o seu código exclusivo. Ele já está vinculado às suas fotos no ateliê da KM Personalizados:
                 </p>
               </div>
 
@@ -284,7 +249,7 @@ export default function CartCheckout({
               <div className="bg-atelier-100 rounded-2xl p-4 border border-atelier-300 max-w-md mx-auto flex items-center justify-between gap-4">
                 <div className="text-left">
                   <span className="text-[11px] font-semibold text-atelier-500 uppercase block">
-                    Código do Pedido
+                    Código da Encomenda
                   </span>
                   <span className="font-mono text-2xl font-extrabold text-brand tracking-wider">
                     {completedOrder.code}
@@ -292,7 +257,7 @@ export default function CartCheckout({
                 </div>
                 <button
                   onClick={copyCode}
-                  className="px-4 py-2 bg-white hover:bg-atelier-50 text-atelier-800 text-xs font-bold rounded-xl border border-atelier-300 flex items-center gap-1.5 shadow-xs transition-colors"
+                  className="px-4 py-2 bg-white hover:bg-atelier-50 text-atelier-800 text-xs font-bold rounded-xl border border-atelier-300 flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                 >
                   <Copy className="w-4 h-4 text-brand" />
                   <span>{copied ? 'Copiado!' : 'Copiar'}</span>
@@ -307,23 +272,25 @@ export default function CartCheckout({
                 </div>
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-semibold">R$ {completedOrder.subtotal.toFixed(2).replace('.', ',')}</span>
+                  <span className="font-semibold">{completedOrder.subtotal.toFixed(2).replace('.', ',')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Frete ({completedOrder.shippingType}):</span>
-                  <span className="font-semibold">R$ {completedOrder.shippingFee.toFixed(2).replace('.', ',')}</span>
+                  <span>Envio ({completedOrder.shippingType}):</span>
+                  <span className="font-semibold">{completedOrder.shippingFee.toFixed(2).replace('.', ',')} €</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-atelier-200 text-sm font-bold text-brand-dark">
-                  <span>Total:</span>
-                  <span>R$ {completedOrder.total.toFixed(2).replace('.', ',')}</span>
+                  <span>Total a Pagar:</span>
+                  <span className="text-base text-brand">
+                    {completedOrder.total.toFixed(2).replace('.', ',')} €
+                  </span>
                 </div>
               </div>
 
               {/* WhatsApp Launch Button */}
               <div className="space-y-3 max-w-md mx-auto">
                 <a
-                  href={`https://wa.me/${(settings?.whatsapp || '5541999999999').replace(/\D/g, '')}?text=${encodeURIComponent(
-                    `Olá KM Personalizados! Meu pedido é o ${completedOrder.code}. As fotos já estão salvas no site. Gostaria de acertar o pagamento via Pix!`
+                  href={`https://wa.me/${(settings?.whatsapp || '351965639401').replace(/\D/g, '')}?text=${encodeURIComponent(
+                    `Olá KM Personalizados! O meu pedido é o ${completedOrder.code}. As minhas fotos já foram salvas no site. Gostaria de acertar o pagamento!`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -335,9 +302,9 @@ export default function CartCheckout({
 
                 <button
                   onClick={onClose}
-                  className="w-full py-2.5 text-xs text-atelier-500 hover:text-atelier-800 font-semibold"
+                  className="w-full py-2.5 text-xs text-atelier-500 hover:text-atelier-800 font-semibold cursor-pointer"
                 >
-                  Fechar Janela
+                  Concluir e Fechar Janela
                 </button>
               </div>
 
@@ -347,83 +314,86 @@ export default function CartCheckout({
             <div className="space-y-6">
               
               {/* Items Summary preview */}
-              <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-3">
+              <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
                   <span>{matchedKitName}</span>
                   <span className="text-base text-brand">
-                    R$ {subtotal.toFixed(2).replace('.', ',')}
+                    {subtotal.toFixed(2).replace('.', ',')} €
                   </span>
                 </div>
                 <p className="text-xs text-atelier-500">
-                  {count} bóton(s) quadrado(s) com borda borrada 6,1cm e área segura 5,0cm.
+                  {count} bóton(s) ímã quadrado(s) com borda borrada 6,1cm e área segura 5,0cm.
                 </p>
+                {count >= 5 && count <= 6 && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg">
+                    <Gift className="w-3.5 h-3.5 text-rose-600" />
+                    Promoção de Inauguração: Paga 5 e leva 1 de BRINDE!
+                  </span>
+                )}
               </div>
 
-              {/* Shipping Calculator (Google Sheets) */}
+              {/* Shipping Selection (Portugal CTT & Google Sheets Options) */}
               <div className="bg-white rounded-2xl p-4 border border-atelier-200 shadow-xs space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-brand-dark">
-                  <Truck className="w-4 h-4 text-brand" />
-                  <span>Calcular Frete & Prazo de Entrega</span>
+                <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
+                  <span className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-brand" />
+                    <span>Selecione a Modalidade de Envio (Portugal)</span>
+                  </span>
+                  <span className="text-[10px] text-atelier-500 font-normal">
+                    Via CTT / InPost
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <div className="sm:col-span-8">
-                    <input
-                      type="text"
-                      placeholder="Digite seu CEP (Ex: 80000-000)"
-                      value={cep}
-                      onChange={(e) => setCep(e.target.value)}
-                      onBlur={handleCepBlur}
-                      maxLength={9}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
-                    />
-                  </div>
-                  <div className="sm:col-span-4">
-                    <button
-                      onClick={handleCalculateShipping}
-                      disabled={shippingLoading}
-                      className="w-full py-2.5 px-4 bg-atelier-100 hover:bg-atelier-200 text-atelier-800 font-bold text-xs rounded-xl border border-atelier-300 transition-colors cursor-pointer"
-                    >
-                      {shippingLoading ? 'Calculando...' : 'Calcular'}
-                    </button>
-                  </div>
+                <div className="space-y-2">
+                  {shippingMethods.map((m) => {
+                    const isSelected = selectedMethodId === m.id;
+                    return (
+                      <label
+                        key={m.id}
+                        className={`flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-brand bg-brand-cream/60 ring-2 ring-brand/10'
+                            : 'border-atelier-200 hover:bg-atelier-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="shippingMethod"
+                            checked={isSelected}
+                            onChange={() => setSelectedMethodId(m.id)}
+                            className="accent-brand"
+                          />
+                          <div>
+                            <span className="font-bold text-brand-dark block">{m.name}</span>
+                            <span className="text-[11px] text-atelier-500 block">{m.desc}</span>
+                          </div>
+                        </div>
+
+                        <span className="font-bold text-brand text-sm whitespace-nowrap ml-2">
+                          {m.fee === 0 ? 'Grátis' : `${m.fee.toFixed(2).replace('.', ',')} €`}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
-
-                {/* Shipping result pill */}
-                {shippingResult && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-900">
-                    <div>
-                      <span className="font-bold">{shippingResult.region || 'Entrega Padrão'}</span>
-                      <span className="text-[11px] text-emerald-700 block">
-                        Prazo estimado: {shippingResult.days} a {shippingResult.days + 2} dias úteis
-                      </span>
-                    </div>
-                    <span className="font-bold text-sm text-emerald-800">
-                      R$ {shippingResult.fee.toFixed(2).replace('.', ',')}
-                    </span>
-                  </div>
-                )}
-
-                {shippingError && (
-                  <p className="text-xs text-rose-600">{shippingError}</p>
-                )}
               </div>
 
               {/* Customer Contact Information */}
               <div className="space-y-3">
                 <h4 className="font-serif text-sm font-bold text-brand-dark flex items-center gap-1.5">
                   <User className="w-4 h-4 text-brand" />
-                  <span>Seus Dados para o Pedido</span>
+                  <span>Os Seus Dados de Contacto</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-atelier-700 mb-1">
-                      Seu Nome Completo *
+                      O Seu Nome Completo *
                     </label>
                     <input
                       type="text"
-                      placeholder="Ex: Ana Clara Lima"
+                      placeholder="Ex: Maria Silva"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
@@ -432,11 +402,11 @@ export default function CartCheckout({
 
                   <div>
                     <label className="block text-[11px] font-semibold text-atelier-700 mb-1">
-                      WhatsApp para Contato *
+                      Telemóvel / WhatsApp *
                     </label>
                     <input
                       type="tel"
-                      placeholder="Ex: (41) 99999-9999"
+                      placeholder="Ex: +351 912 345 678"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
@@ -445,11 +415,11 @@ export default function CartCheckout({
                 </div>
               </div>
 
-              {/* Delivery Address */}
+              {/* Delivery Address (Portugal Postal Code) */}
               <div className="space-y-3">
                 <h4 className="font-serif text-sm font-bold text-brand-dark flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-brand" />
-                  <span>Endereço de Entrega (Opcional se for retirada)</span>
+                  <span>Morada de Entrega em Portugal</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -465,7 +435,7 @@ export default function CartCheckout({
                   <div>
                     <input
                       type="text"
-                      placeholder="Número"
+                      placeholder="Nº / Andar / Porta"
                       value={number}
                       onChange={(e) => setNumber(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
@@ -477,68 +447,78 @@ export default function CartCheckout({
                   <div>
                     <input
                       type="text"
-                      placeholder="Bairro"
-                      value={neighborhood}
-                      onChange={(e) => setNeighborhood(e.target.value)}
+                      placeholder="Código Postal (XXXX-XXX)"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      maxLength={8}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand font-mono"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Freguesia / Concelho"
+                      value={concelho}
+                      onChange={(e) => setConcelho(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
                     />
                   </div>
                   <div>
                     <input
                       type="text"
-                      placeholder="Cidade"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Distrito / Ilha"
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="UF (Estado)"
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      maxLength={2}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand uppercase"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Totals Box */}
+              {/* Totals Box in Euro */}
               <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-2 text-xs text-atelier-700">
                 <div className="flex justify-between">
                   <span>Subtotal ({count} bótons):</span>
-                  <span className="font-semibold">R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+                  <span className="font-semibold">{subtotal.toFixed(2).replace('.', ',')} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Frete:</span>
+                  <span>Envio ({selectedShipping.name}):</span>
                   <span className="font-semibold">
-                    {shippingResult ? `R$ ${shippingFee.toFixed(2).replace('.', ',')}` : 'A calcular'}
+                    {shippingFee === 0 ? 'Grátis' : `${shippingFee.toFixed(2).replace('.', ',')} €`}
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-atelier-200 text-base font-bold text-brand-dark">
-                  <span>Total do Pedido:</span>
-                  <span className="text-xl text-brand">
-                    R$ {grandTotal.toFixed(2).replace('.', ',')}
+                  <span>Total da Encomenda:</span>
+                  <span className="text-xl text-brand font-extrabold">
+                    {grandTotal.toFixed(2).replace('.', ',')} €
                   </span>
                 </div>
               </div>
 
               {/* Finish Button */}
               <button
-                disabled={isSubmitting || count === 0}
+                disabled={isSubmitting || count < 2}
                 onClick={handleFinishOrder}
                 className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-atelier-300 text-white font-bold text-base shadow-tactile transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 cursor-pointer"
               >
-                <span>{isSubmitting ? 'Salvando Fotos & Criando Pedido...' : 'Salvar Fotos & Finalizar no WhatsApp'}</span>
+                <span>{isSubmitting ? 'A salvar fotos & a criar encomenda...' : 'Salvar Fotos & Abrir no WhatsApp'}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
 
-              <p className="text-[11px] text-center text-atelier-500 flex items-center justify-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Suas fotos serão salvas em alta qualidade vinculadas ao seu código de pedido.</span>
-              </p>
+              <div className="text-[11px] text-center text-atelier-500 space-y-1">
+                <p className="flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>As suas fotografias são guardadas apenas até a encomenda ser entregue, sendo depois apagadas.</span>
+                </p>
+                {onOpenTerms && (
+                  <button
+                    onClick={onOpenTerms}
+                    className="text-brand hover:underline font-semibold cursor-pointer"
+                  >
+                    Consulte os Termos de Uso e Política de Reembolso
+                  </button>
+                )}
+              </div>
 
             </div>
           )}

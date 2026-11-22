@@ -15,7 +15,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'km-personalizados-super-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'km-personalizados-portugal-secret-2026';
 
 // Ensure data and upload directories exist
 const dataDir = path.join(__dirname, 'data');
@@ -25,68 +25,130 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const dbPath = path.join(dataDir, 'db.json');
 
-// Initialize database if not exists
+// Initial database configuration focused on Portugal (€, CTT shipping, etc.)
 const defaultDb = {
   settings: {
     storeName: 'KM Personalizados',
-    whatsapp: '5541999999999', // Default WhatsApp number (editable in Admin)
+    country: 'Portugal',
+    currency: '€',
+    whatsapp: '351965639401', // Official WhatsApp Portugal
+    email: 'kmpersonalisados@gmail.com',
     instagram: 'https://www.instagram.com/km_personalisado?jplx=NzlqdWsxdXljcWw=',
     tiktok: 'https://www.tiktok.com/@km_personalizado?_r=1&_t=ZG-9Bcw9tWOna4',
-    productionDays: 3,
-    shippingInfoText: 'Enviamos para todo o Brasil via Correios (PAC/Sedex) ou Motoboy local. Embalagem reforçada anti-impacto para garantir que seus ímãs cheguem impecáveis!',
-    careInstructions: 'Limpe apenas com pano seco ou levemente umedecido em água. Não use álcool nem produtos abrasivos. Evite exposição prolongada ao sol intenso.',
-    googleSheetsCsvUrl: '',
+    productionDays: 2,
+    shippingInfoText: 'Envios para todo Portugal Continental e Ilhas via CTT Correio Verde ou CTT Registado com rastreio, ou levantamento em cacifo InPost 24h. Embalagem reforçada anti-impacto para máxima proteção.',
+    careInstructions: 'Limpe apenas com um pano macio e seco. Não utilize álcool ou produtos químicos abrasivos. Evite exposição direta e prolongada ao sol intenso.',
+    googleSheetsCsvUrl: 'https://docs.google.com/spreadsheets/d/1e4iCyvMsLaz2zGzrW0mqcosvbHDLmhwdpnbuXzeoSxo/export?format=csv',
     kits: [
-      { id: 'avulso', name: 'Avulso', units: 1, price: 6.00, originalPrice: 8.00, badge: 'Para experimentar', highlight: false },
-      { id: 'kit-6', name: 'Kit 6 Unidades', units: 6, price: 27.00, originalPrice: 36.00, badge: 'Popular', highlight: false },
-      { id: 'kit-12', name: 'Kit 12 Unidades (Folha Inteira)', units: 12, price: 48.00, originalPrice: 72.00, badge: 'Mais Vendido ⭐', highlight: true },
-      { id: 'kit-24', name: 'Kit 24 Unidades (2 Folhas)', units: 24, price: 89.00, originalPrice: 144.00, badge: 'Melhor Custo-Benefício 🚀', highlight: false }
+      {
+        id: 'minimo-2',
+        name: 'Pedido Mínimo (2 Bótons)',
+        units: 2,
+        price: 12.00,
+        unitPrice: 6.00,
+        originalPrice: 14.00,
+        badge: 'Pedido Mínimo',
+        highlight: false,
+        description: 'Mínimo de 2 unidades por encomenda (6,00 € cada). Ideal para experimentar a qualidade do ateliê.'
+      },
+      {
+        id: 'promo-inauguracao',
+        name: 'Promoção de Inauguração (5 + 1 Grátis)',
+        units: 6,
+        chargeUnits: 5,
+        price: 25.00,
+        unitPrice: 4.17,
+        originalPrice: 36.00,
+        badge: '🎉 1 DE BRINDE (Mais Pedido)',
+        highlight: true,
+        description: 'Pague 5 unidades (25,00 €) e LEVE 1 DE BRINDE! Total de 6 bótons ímãs quadrados com brilho especial.'
+      },
+      {
+        id: 'kit-12',
+        name: 'Kit 12 Unidades (Folha Inteira)',
+        units: 12,
+        price: 45.00,
+        unitPrice: 3.75,
+        badge: 'Sob Consulta / Em Breve',
+        highlight: false,
+        isPending: true,
+        description: 'Preenche 1 folha A4 completa. Preço especial em definição pela equipa do ateliê.'
+      },
+      {
+        id: 'kit-24',
+        name: 'Kit 24 Unidades (2 Folhas)',
+        units: 24,
+        price: 80.00,
+        unitPrice: 3.33,
+        badge: 'Sob Consulta / Em Breve',
+        highlight: false,
+        isPending: true,
+        description: '2 folhas A4 completas. Preço promocional em breve.'
+      }
+    ],
+    shippingMethods: [
+      { id: 'ctt-verde', name: 'CTT Correio Verde (Almofadada)', fee: 2.70, days: 2, desc: 'Económico e rápido para Portugal Continental e Ilhas' },
+      { id: 'ctt-registado', name: 'CTT Correio Registado (Com Rastreio)', fee: 3.20, days: 1, desc: 'Entrega segura em mão com código de rastreio oficial CTT' },
+      { id: 'inpost-locker', name: 'InPost (Cacifo Automático 24h)', fee: 3.85, days: 3, desc: 'Levantamento cómodo a qualquer hora num cacifo perto de si' },
+      { id: 'levantamento-local', name: 'Levantamento em Mãos', fee: 0.00, days: 1, desc: 'Grátis - Combinar entrega local diretamente no WhatsApp' }
     ],
     upcomingProducts: [
       { id: 'botons-redondos', title: 'Bótons Redondos Clássicos', description: 'O clássico bóton americano com alfinete de segurança e acabamento espelhado.', icon: 'Circle' },
-      { id: 'chaveiros-acrilico', title: 'Chaveiros Acrílicos Foto', description: 'Chaveiros transparentes em acrílico resistente com sua foto frente e verso.', icon: 'Key' },
+      { id: 'chaveiros-acrilico', title: 'Chaveiros Acrílicos com Foto', description: 'Chaveiros transparentes em acrílico resistente com a sua foto frente e verso.', icon: 'Key' },
       { id: 'imas-polaroid', title: 'Ímãs Estilo Polaroid Vintage', description: 'Ímãs retangulares com borda branca retrô e legenda personalizada.', icon: 'Camera' }
     ]
   },
   admin: {
     username: 'admin',
-    // Hash for 'admin123'
     passwordHash: bcrypt.hashSync('admin123', 10)
   },
   orders: [],
   reviews: [
     {
       id: 'rev-1',
-      name: 'Mariana Silva',
+      name: 'Joana Ferreira',
       rating: 5,
-      comment: 'Ficaram perfeitos na minha geladeira! A qualidade da foto e o brilho do acabamento são surreais. Já vou pedir mais para presentear minha mãe.',
-      photoUrl: '/assets/logo-km.jpg',
+      comment: 'Ficaram espetaculares no nosso frigorífico! As cores são super vivas e a borda borrada fica super profissional, não cortou nada das fotos dos meus filhos.',
+      photoUrl: '/assets/sample-family.jpg',
       status: 'approved',
-      createdAt: '2026-11-15T14:20:00Z'
+      createdAt: '2026-11-18T14:20:00Z'
     },
     {
       id: 'rev-2',
-      name: 'Carlos Eduardo',
+      name: 'Tiago Mendes',
       rating: 5,
-      comment: 'Chegou super rápido e muito bem embalado. O ímã tem uma força excelente, não escorrega de jeito nenhum. Recomendo de olhos fechados!',
-      photoUrl: null,
+      comment: 'Aproveitei a promoção de inauguração de 5+1 de brinde. Chegou rápido via CTT Registado e muito bem embalado com plástico bolha. Recomendo!',
+      photoUrl: '/assets/sample-couple.jpg',
       status: 'approved',
-      createdAt: '2026-11-18T10:15:00Z'
+      createdAt: '2026-11-20T10:15:00Z'
     },
     {
       id: 'rev-3',
-      name: 'Beatriz Santos',
+      name: 'Inês Albuquerque',
       rating: 5,
-      comment: 'Amei a borda borrada! Nenhuma foto cortou rosto ou detalhes importantes. Atendimento pelo WhatsApp nota 1000!',
-      photoUrl: null,
+      comment: 'O ímã tem uma força excelente, não desliza no frigorífico de forma alguma. O atendimento no WhatsApp foi cinco estrelas!',
+      photoUrl: '/assets/sample-pet.jpg',
       status: 'approved',
-      createdAt: '2026-11-20T18:40:00Z'
+      createdAt: '2026-11-21T18:40:00Z'
     }
   ]
 };
 
+// Reset/Update db.json if needed with Portugal defaults
 if (!fs.existsSync(dbPath)) {
   fs.writeFileSync(dbPath, JSON.stringify(defaultDb, null, 2), 'utf-8');
+} else {
+  try {
+    const existing = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+    existing.settings = { ...defaultDb.settings, ...existing.settings };
+    existing.settings.whatsapp = '351965639401';
+    existing.settings.email = 'kmpersonalisados@gmail.com';
+    existing.settings.currency = '€';
+    existing.settings.googleSheetsCsvUrl = defaultDb.settings.googleSheetsCsvUrl;
+    existing.settings.kits = defaultDb.settings.kits;
+    existing.settings.shippingMethods = defaultDb.settings.shippingMethods;
+    fs.writeFileSync(dbPath, JSON.stringify(existing, null, 2), 'utf-8');
+  } catch {}
 }
 
 function getDb() {
@@ -115,7 +177,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "https://images.unsplash.com"],
       connectSrc: ["'self'", "https://docs.google.com", "https://sheets.googleapis.com", "data:", "blob:"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -133,7 +195,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(uploadsDir));
-// Serve public assets statically (logo, banner)
+// Serve public assets statically (logo, banner, sample photos)
 app.use('/assets', express.static(path.join(rootDir, 'public', 'assets')));
 
 // Helper to sanitize text (anti-XSS)
@@ -199,7 +261,10 @@ app.get('/api/settings', (req, res) => {
   const db = getDb();
   res.json({
     storeName: db.settings.storeName,
-    whatsapp: db.settings.whatsapp,
+    country: db.settings.country || 'Portugal',
+    currency: db.settings.currency || '€',
+    whatsapp: db.settings.whatsapp || '351965639401',
+    email: db.settings.email || 'kmpersonalisados@gmail.com',
     instagram: db.settings.instagram,
     tiktok: db.settings.tiktok,
     productionDays: db.settings.productionDays,
@@ -207,6 +272,7 @@ app.get('/api/settings', (req, res) => {
     careInstructions: db.settings.careInstructions,
     googleSheetsCsvUrl: db.settings.googleSheetsCsvUrl,
     kits: db.settings.kits,
+    shippingMethods: db.settings.shippingMethods,
     upcomingProducts: db.settings.upcomingProducts
   });
 });
@@ -216,27 +282,35 @@ app.put('/api/admin/settings', authAdmin, (req, res) => {
   const db = getDb();
   const {
     whatsapp,
+    email,
     productionDays,
     shippingInfoText,
     careInstructions,
     googleSheetsCsvUrl,
     kits,
+    shippingMethods,
+    newUsername,
     newPassword
   } = req.body;
 
   if (whatsapp !== undefined) db.settings.whatsapp = sanitizeText(whatsapp);
-  if (productionDays !== undefined) db.settings.productionDays = Number(productionDays) || 3;
+  if (email !== undefined) db.settings.email = sanitizeText(email);
+  if (productionDays !== undefined) db.settings.productionDays = Number(productionDays) || 2;
   if (shippingInfoText !== undefined) db.settings.shippingInfoText = sanitizeText(shippingInfoText);
   if (careInstructions !== undefined) db.settings.careInstructions = sanitizeText(careInstructions);
   if (googleSheetsCsvUrl !== undefined) db.settings.googleSheetsCsvUrl = googleSheetsCsvUrl.trim();
   if (Array.isArray(kits)) db.settings.kits = kits;
+  if (Array.isArray(shippingMethods)) db.settings.shippingMethods = shippingMethods;
 
+  if (newUsername && newUsername.trim()) {
+    db.admin.username = sanitizeText(newUsername);
+  }
   if (newPassword && newPassword.length >= 6) {
     db.admin.passwordHash = bcrypt.hashSync(newPassword, 10);
   }
 
   saveDb(db);
-  res.json({ success: true, settings: db.settings });
+  res.json({ success: true, settings: db.settings, adminUser: db.admin.username });
 });
 
 // 3. Admin Login
@@ -245,12 +319,12 @@ app.post('/api/admin/login', (req, res) => {
   const db = getDb();
 
   if (username !== db.admin.username) {
-    return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+    return res.status(401).json({ error: 'Utilizador ou palavra-passe incorretos.' });
   }
 
   const isMatch = bcrypt.compareSync(password || '', db.admin.passwordHash);
   if (!isMatch) {
-    return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+    return res.status(401).json({ error: 'Utilizador ou palavra-passe incorretos.' });
   }
 
   const token = jwt.sign({ username: db.admin.username }, JWT_SECRET, { expiresIn: '7d' });
@@ -288,7 +362,7 @@ app.post('/api/orders', (req, res) => {
       shippingType,
       estimatedDays,
       address,
-      items // Array of processed photos with crop/blur metadata and image URLs / base64
+      items
     } = req.body;
 
     if (!items || !items.length) {
@@ -310,20 +384,20 @@ app.post('/api/orders', (req, res) => {
       customerName: sanitizeText(customerName) || 'Cliente',
       customerPhone: sanitizeText(customerPhone) || '',
       kitId: kitId || 'personalizado',
-      kitName: kitName || `${items.length} Unidades`,
+      kitName: kitName || `${items.length} Bótons Ímãs`,
       quantity: Number(quantity) || items.length,
       subtotal: Number(subtotal) || 0,
       shippingFee: Number(shippingFee) || 0,
-      shippingType: sanitizeText(shippingType) || 'Entrega',
-      estimatedDays: Number(estimatedDays) || db.settings.productionDays || 3,
+      shippingType: sanitizeText(shippingType) || 'CTT Correio Verde',
+      estimatedDays: Number(estimatedDays) || db.settings.productionDays || 2,
       total: (Number(subtotal) || 0) + (Number(shippingFee) || 0),
+      currency: '€',
       address: address ? {
-        cep: sanitizeText(address.cep),
+        postalCode: sanitizeText(address.postalCode || address.cep),
         street: sanitizeText(address.street),
         number: sanitizeText(address.number),
-        neighborhood: sanitizeText(address.neighborhood),
-        city: sanitizeText(address.city),
-        state: sanitizeText(address.state),
+        concelho: sanitizeText(address.concelho || address.neighborhood),
+        district: sanitizeText(address.district || address.city),
         complement: sanitizeText(address.complement)
       } : null,
       items: items.map((it, idx) => ({
@@ -337,7 +411,7 @@ app.post('/api/orders', (req, res) => {
         resolution: it.resolution || null,
         qualityBadge: it.qualityBadge || 'good'
       })),
-      status: 'Pendente', // Pendente, Em Produção, Pronto, Enviado, Concluído
+      status: 'Pendente',
       statusHistory: [
         { status: 'Pendente', date: new Date().toISOString(), note: 'Pedido criado no site' }
       ],
@@ -350,7 +424,7 @@ app.post('/api/orders', (req, res) => {
     res.json({ success: true, order: newOrder });
   } catch (err) {
     console.error('Error creating order:', err);
-    res.status(500).json({ error: 'Erro ao registrar pedido.' });
+    res.status(500).json({ error: 'Erro ao registar encomenda.' });
   }
 });
 
@@ -362,10 +436,9 @@ app.get('/api/orders/:code', (req, res) => {
 
   const order = db.orders.find(o => o.code.toUpperCase() === cleanCode.toUpperCase());
   if (!order) {
-    return res.status(404).json({ error: 'Pedido não encontrado. Verifique o código digitado.' });
+    return res.status(404).json({ error: 'Encomenda não encontrada. Verifique o código digitado.' });
   }
 
-  // Return public safe view of order
   res.json({
     code: order.code,
     customerName: order.customerName,
@@ -376,6 +449,7 @@ app.get('/api/orders/:code', (req, res) => {
     total: order.total,
     subtotal: order.subtotal,
     shippingFee: order.shippingFee,
+    currency: '€',
     createdAt: order.createdAt,
     itemsCount: order.items.length,
     items: order.items.map(it => ({
@@ -398,7 +472,7 @@ app.patch('/api/admin/orders/:code/status', authAdmin, (req, res) => {
   const order = db.orders.find(o => o.code.toUpperCase() === req.params.code.toUpperCase());
 
   if (!order) {
-    return res.status(404).json({ error: 'Pedido não encontrado.' });
+    return res.status(404).json({ error: 'Encomenda não encontrada.' });
   }
 
   const validStatuses = ['Pendente', 'Em Produção', 'Pronto', 'Enviado', 'Concluído', 'Cancelado'];
@@ -424,7 +498,7 @@ app.delete('/api/admin/orders/:code', authAdmin, (req, res) => {
   db.orders = db.orders.filter(o => o.code.toUpperCase() !== req.params.code.toUpperCase());
 
   if (db.orders.length === initialLen) {
-    return res.status(404).json({ error: 'Pedido não encontrado.' });
+    return res.status(404).json({ error: 'Encomenda não encontrada.' });
   }
 
   saveDb(db);
@@ -438,7 +512,7 @@ app.post('/api/reviews', upload.single('photo'), (req, res) => {
     const { name, rating, comment } = req.body;
 
     if (!name || !rating || !comment) {
-      return res.status(400).json({ error: 'Preencha nome, avaliação e seu comentário.' });
+      return res.status(400).json({ error: 'Preencha o seu nome, classificação e comentário.' });
     }
 
     const photoUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -449,7 +523,7 @@ app.post('/api/reviews', upload.single('photo'), (req, res) => {
       rating: Math.min(5, Math.max(1, Number(rating) || 5)),
       comment: sanitizeText(comment),
       photoUrl,
-      status: 'pending', // Moderation required
+      status: 'pending',
       createdAt: new Date().toISOString()
     };
 
@@ -458,7 +532,7 @@ app.post('/api/reviews', upload.single('photo'), (req, res) => {
 
     res.json({
       success: true,
-      message: 'Obrigado por sua avaliação! Ela será publicada após a aprovação da nossa equipe.'
+      message: 'Obrigado pela sua avaliação! Ela será publicada após validação da nossa equipa.'
     });
   } catch (err) {
     console.error('Error submitting review:', err);
@@ -506,91 +580,23 @@ app.delete('/api/admin/reviews/:id', authAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-// 16. Google Sheets Shipping Proxy & Fallback
+// 16. Portugal CTT & Google Sheets Shipping Calculator
 app.get('/api/shipping/calculate', async (req, res) => {
-  const { cep, city, neighborhood } = req.query;
+  const { postalCode, methodId } = req.query;
   const db = getDb();
-  const sheetUrl = db.settings.googleSheetsCsvUrl;
+  const methods = db.settings.shippingMethods || [];
 
-  try {
-    if (sheetUrl && sheetUrl.startsWith('http')) {
-      // Fetch CSV from published Google Sheets link
-      const response = await fetch(sheetUrl);
-      if (response.ok) {
-        const csvText = await response.text();
-        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-        const rows = parsed.data || [];
-
-        // Match by CEP prefix or City/Neighborhood
-        const cleanCep = (cep || '').replace(/\D/g, '');
-        let matched = null;
-
-        for (const row of rows) {
-          const rowCep = String(row.cep || row.CEP || '').replace(/\D/g, '');
-          const rowCity = String(row.cidade || row.Cidade || '').toLowerCase().trim();
-          const rowNeigh = String(row.bairro || row.Bairro || '').toLowerCase().trim();
-
-          if (cleanCep && rowCep && cleanCep.startsWith(rowCep.substring(0, 5))) {
-            matched = row;
-            break;
-          }
-
-          if (city && rowCity && city.toLowerCase().trim().includes(rowCity)) {
-            if (!neighborhood || !rowNeigh || neighborhood.toLowerCase().trim().includes(rowNeigh)) {
-              matched = row;
-              break;
-            }
-          }
-        }
-
-        if (matched) {
-          const fee = parseFloat(String(matched.valor || matched.preco || matched.taxa || matched.Frete || '0').replace(',', '.'));
-          const days = parseInt(matched.prazo || matched.dias || '3', 10);
-          return res.json({
-            found: true,
-            fee: isNaN(fee) ? 15.00 : fee,
-            days: isNaN(days) ? 3 : days,
-            source: 'sheets',
-            region: matched.regiao || matched.cidade || matched.bairro || 'Local'
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Google Sheets fetch warning:', err.message);
-  }
-
-  // Graceful fallback calculator if Google Sheets is not configured or query not found
-  const cleanCep = (cep || '').replace(/\D/g, '');
-  let fee = 14.90;
-  let days = 4;
-  let region = 'Envio Padrão';
-
-  if (cleanCep.length === 8) {
-    const firstDigit = cleanCep[0];
-    if (firstDigit === '8' || firstDigit === '9') {
-      // Sul
-      fee = 12.90;
-      days = 3;
-      region = 'Região Sul (Expresso)';
-    } else if (firstDigit === '0' || firstDigit === '1' || firstDigit === '2' || firstDigit === '3') {
-      // SP/RJ/MG
-      fee = 16.50;
-      days = 5;
-      region = 'Sudeste';
-    } else {
-      fee = 22.00;
-      days = 7;
-      region = 'Nacional';
-    }
-  }
+  // Default method if none chosen: CTT Correio Verde (2,70 €)
+  let chosenMethod = methods.find(m => m.id === methodId) || methods[0];
 
   res.json({
     found: true,
-    fee,
-    days,
-    source: sheetUrl ? 'fallback' : 'default',
-    region
+    currency: '€',
+    fee: chosenMethod.fee,
+    days: chosenMethod.days,
+    methodName: chosenMethod.name,
+    desc: chosenMethod.desc,
+    availableMethods: methods
   });
 });
 
@@ -604,5 +610,5 @@ if (fs.existsSync(distPath)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`✨ Servidor KM Personalizados rodando na porta ${PORT}`);
+  console.log(`✨ Servidor KM Personalizados Portugal rodando na porta ${PORT}`);
 });

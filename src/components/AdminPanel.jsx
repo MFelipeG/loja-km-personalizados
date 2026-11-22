@@ -17,7 +17,11 @@ import {
   Truck,
   Plus,
   RefreshCw,
-  X
+  X,
+  Key,
+  ShieldCheck,
+  Mail,
+  Phone
 } from 'lucide-react';
 import A4PrintModal from './A4PrintModal';
 
@@ -47,13 +51,17 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
   // Settings state
   const [settingsForm, setSettingsForm] = useState({
     whatsapp: '',
-    productionDays: 3,
+    email: '',
+    productionDays: 2,
     shippingInfoText: '',
     careInstructions: '',
     googleSheetsCsvUrl: '',
     kits: [],
+    shippingMethods: [],
+    newUsername: '',
     newPassword: ''
   });
+  const [currentAdminUser, setCurrentAdminUser] = useState('admin');
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSavedMessage, setSettingsSavedMessage] = useState('');
 
@@ -104,12 +112,15 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
       if (res.ok) {
         const data = await res.json();
         setSettingsForm({
-          whatsapp: data.whatsapp || '',
-          productionDays: data.productionDays || 3,
+          whatsapp: data.whatsapp || '351965639401',
+          email: data.email || 'kmpersonalisados@gmail.com',
+          productionDays: data.productionDays || 2,
           shippingInfoText: data.shippingInfoText || '',
           careInstructions: data.careInstructions || '',
           googleSheetsCsvUrl: data.googleSheetsCsvUrl || '',
           kits: data.kits || [],
+          shippingMethods: data.shippingMethods || [],
+          newUsername: '',
           newPassword: ''
         });
       }
@@ -145,13 +156,14 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
       if (res.ok) {
         const data = await res.json();
         setToken(data.token);
+        setCurrentAdminUser(data.username);
         localStorage.setItem('km_admin_token', data.token);
         fetchOrders(data.token);
         fetchReviews(data.token);
         fetchSettings();
       } else {
         const err = await res.json().catch(() => ({}));
-        setLoginError(err.error || 'Credenciais inválidas.');
+        setLoginError(err.error || 'Utilizador ou palavra-passe incorretos.');
       }
     } catch {
       setLoginError('Erro de conexão ao autenticar.');
@@ -186,7 +198,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
   // Delete completed order
   const handleDeleteOrder = async (code) => {
-    if (!confirm(`Deseja realmente excluir o pedido ${code}? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Deseja realmente eliminar a encomenda ${code}? Esta ação não pode ser desfeita.`)) return;
     try {
       const res = await fetch(`/api/admin/orders/${encodeURIComponent(code)}`, {
         method: 'DELETE',
@@ -196,7 +208,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
         fetchOrders();
       }
     } catch (err) {
-      alert('Erro ao excluir pedido: ' + err.message);
+      alert('Erro ao eliminar encomenda: ' + err.message);
     }
   };
 
@@ -221,7 +233,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
   // Delete review
   const handleDeleteReview = async (id) => {
-    if (!confirm('Deseja excluir esta avaliação?')) return;
+    if (!confirm('Deseja eliminar esta avaliação?')) return;
     try {
       const res = await fetch(`/api/admin/reviews/${id}`, {
         method: 'DELETE',
@@ -231,11 +243,11 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
         fetchReviews();
       }
     } catch (err) {
-      alert('Erro ao excluir avaliação: ' + err.message);
+      alert('Erro ao eliminar avaliação: ' + err.message);
     }
   };
 
-  // Save Store Settings
+  // Save Store Settings & New Password
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     setSavingSettings(true);
@@ -251,14 +263,17 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
       });
 
       if (res.ok) {
-        setSettingsSavedMessage('Configurações salvas com sucesso!');
+        const resData = await res.json();
+        setSettingsSavedMessage('Configurações e credenciais guardadas com sucesso!');
+        if (resData.adminUser) setCurrentAdminUser(resData.adminUser);
+        setSettingsForm((prev) => ({ ...prev, newPassword: '', newUsername: '' }));
         if (onSettingsUpdated) onSettingsUpdated();
-        setTimeout(() => setSettingsSavedMessage(''), 3000);
+        setTimeout(() => setSettingsSavedMessage(''), 4000);
       } else {
-        alert('Erro ao salvar configurações.');
+        alert('Erro ao guardar configurações.');
       }
     } catch (err) {
-      alert('Erro de conexão ao salvar configurações.');
+      alert('Erro de conexão ao guardar configurações.');
     } finally {
       setSavingSettings(false);
     }
@@ -286,10 +301,10 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             </div>
             <div>
               <h3 className="font-serif font-bold text-lg leading-tight">
-                Painel Administrativo KM Personalizados
+                Painel da Equipa • KM Personalizados
               </h3>
               <p className="text-xs text-atelier-300">
-                Gestão de Pedidos, Impressão A4 300 DPI, Moderação & Configurações
+                Portugal • Encomendas, Impressão A4 300 DPI, CTT & Segurança
               </p>
             </div>
           </div>
@@ -298,7 +313,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             {token && (
               <button
                 onClick={handleLogout}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Sair do painel"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -307,7 +322,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             )}
             <button
               onClick={onClose}
-              className="p-1.5 text-atelier-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              className="p-1.5 text-atelier-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -323,11 +338,21 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
             <div>
               <h4 className="font-serif text-2xl font-bold text-brand-dark">
-                Acesso Restrito
+                Acesso à Gestão do Ateliê
               </h4>
               <p className="text-xs text-atelier-500 mt-1">
-                Apenas para a equipe do ateliê. Clientes não precisam de login para comprar ou rastrear.
+                Área reservada aos fundadores da KM Personalizados. Os clientes não necessitam de login.
               </p>
+            </div>
+
+            {/* Quick credentials helper banner */}
+            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-left text-xs text-amber-900 space-y-1">
+              <span className="font-bold block">🔑 Seus Dados de Acesso Padrão:</span>
+              <p>• <strong>Utilizador:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-amber-300">admin</code></p>
+              <p>• <strong>Palavra-passe:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-amber-300">admin123</code></p>
+              <span className="text-[10px] text-amber-700 block mt-1">
+                * Poderá alterar o seu utilizador e palavra-passe na aba "Configurações" após entrar!
+              </span>
             </div>
 
             {loginError && (
@@ -339,7 +364,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             <form onSubmit={handleLogin} className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-semibold text-atelier-700 mb-1">
-                  Usuário
+                  Utilizador
                 </label>
                 <input
                   type="text"
@@ -353,7 +378,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
               <div>
                 <label className="block text-xs font-semibold text-atelier-700 mb-1">
-                  Senha
+                  Palavra-passe
                 </label>
                 <input
                   type="password"
@@ -363,9 +388,6 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   onChange={(e) => setPasswordInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
                 />
-                <span className="text-[10px] text-atelier-400 mt-1 block">
-                  Padrão inicial: admin / admin123 (alterável na aba Configurações)
-                </span>
               </div>
 
               <button
@@ -373,7 +395,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 disabled={loggingIn}
                 className="w-full py-3 bg-brand hover:bg-brand-dark disabled:bg-atelier-300 text-atelier-50 font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                {loggingIn ? 'Autenticando...' : 'Entrar no Painel'}
+                {loggingIn ? 'A verificar...' : 'Entrar no Painel'}
               </button>
             </form>
           </div>
@@ -392,7 +414,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 }`}
               >
                 <Package className="w-4 h-4" />
-                <span>Gestão de Pedidos ({orders.length})</span>
+                <span>Gestão de Encomendas ({orders.length})</span>
               </button>
 
               <button
@@ -416,11 +438,11 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 }`}
               >
                 <Settings className="w-4 h-4" />
-                <span>Configurações & Planilha</span>
+                <span>Configurações, Senha & Planilha</span>
               </button>
             </div>
 
-            {/* Tab 1: Orders Management */}
+            {/* Tab 1: Orders Management & Easy 1-Click Print */}
             {activeTab === 'orders' && (
               <div className="p-6 overflow-y-auto space-y-4 flex-1">
                 
@@ -430,7 +452,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     <Search className="w-4 h-4 text-atelier-400 absolute left-3 top-2.5" />
                     <input
                       type="text"
-                      placeholder="Buscar por código ou cliente..."
+                      placeholder="Procurar por código ou cliente..."
                       value={orderSearch}
                       onChange={(e) => setOrderSearch(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
@@ -439,20 +461,20 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
                   <button
                     onClick={() => fetchOrders()}
-                    className="px-3 py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl flex items-center gap-1.5 transition-colors shrink-0"
+                    className="px-3 py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-brand" />
-                    <span>Atualizar Lista</span>
+                    <span>Atualizar Encomendas</span>
                   </button>
                 </div>
 
                 {/* Orders List Table */}
                 {loadingOrders ? (
-                  <p className="text-center py-8 text-xs text-atelier-500">Carregando pedidos...</p>
+                  <p className="text-center py-8 text-xs text-atelier-500">A carregar encomendas...</p>
                 ) : filteredOrders.length === 0 ? (
                   <div className="text-center py-12 text-atelier-500 space-y-2">
                     <Package className="w-10 h-10 mx-auto text-atelier-400" />
-                    <p className="text-sm font-semibold">Nenhum pedido encontrado</p>
+                    <p className="text-sm font-semibold">Nenhuma encomenda registada ainda</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -476,7 +498,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
                           <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-brand-dark">
-                              Total: R$ {ord.total?.toFixed(2).replace('.', ',')}
+                              Total: {ord.total?.toFixed(2).replace('.', ',')} €
                             </span>
                             <select
                               value={ord.status}
@@ -500,30 +522,33 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                               <strong>Itens:</strong> {ord.quantity} unidades • {ord.kitName}
                             </p>
                             <p>
-                              <strong>Endereço:</strong> {ord.address ? `${ord.address.street}, ${ord.address.number || 'S/N'} - ${ord.address.city}/${ord.address.state} (CEP: ${ord.address.cep})` : 'A combinar'}
+                              <strong>Morada:</strong> {ord.address ? `${ord.address.street}, ${ord.address.number || 'S/N'}${ord.address.complement ? ` (${ord.address.complement})` : ''} - ${ord.address.postalCode || ''} ${ord.address.concelho || ''}` : 'A combinar'}
+                            </p>
+                            <p>
+                              <strong>Envio CTT:</strong> {ord.shippingType} ({ord.shippingFee?.toFixed(2).replace('.', ',')} €)
                             </p>
                             <p className="text-[11px] text-atelier-400">
-                              Data: {new Date(ord.createdAt).toLocaleString('pt-BR')}
+                              Data: {new Date(ord.createdAt).toLocaleString('pt-PT')}
                             </p>
                           </div>
 
-                          {/* Quick Actions */}
+                          {/* Quick Actions: Direct Print & Delete */}
                           <div className="flex items-center gap-2 shrink-0">
-                            {/* A4 Print Engine Button */}
+                            {/* Canva-killing Print Engine Button */}
                             <button
                               onClick={() => setSelectedOrderForPrint(ord)}
-                              className="px-3.5 py-2 bg-brand hover:bg-brand-dark text-atelier-50 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                              title="Gerar e imprimir gabarito A4 em 300 DPI sem Canva"
+                              className="px-4 py-2 bg-brand hover:bg-brand-dark text-atelier-50 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                              title="Visualizar, baixar ou imprimir gabarito A4 em 300 DPI sem Canva"
                             >
                               <Printer className="w-4 h-4" />
-                              <span>Gabarito A4 (300 DPI)</span>
+                              <span>Imprimir Folha A4 (300 DPI)</span>
                             </button>
 
                             {/* Delete Order Button */}
                             <button
                               onClick={() => handleDeleteOrder(ord.code)}
-                              className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
-                              title="Excluir pedido"
+                              className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                              title="Eliminar encomenda"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -566,7 +591,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   </h4>
                   <button
                     onClick={() => fetchReviews()}
-                    className="px-3 py-1.5 text-xs text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-lg flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-lg flex items-center gap-1 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Atualizar</span>
@@ -574,9 +599,9 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 </div>
 
                 {loadingReviews ? (
-                  <p className="text-center py-8 text-xs text-atelier-500">Carregando avaliações...</p>
+                  <p className="text-center py-8 text-xs text-atelier-500">A carregar avaliações...</p>
                 ) : reviews.length === 0 ? (
-                  <p className="text-center py-8 text-xs text-atelier-500">Nenhuma avaliação cadastrada.</p>
+                  <p className="text-center py-8 text-xs text-atelier-500">Nenhuma avaliação registada.</p>
                 ) : (
                   <div className="space-y-3">
                     {reviews.map((rev) => (
@@ -615,7 +640,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                           {rev.status !== 'approved' && (
                             <button
                               onClick={() => handleReviewStatus(rev.id, 'approved')}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <CheckCircle className="w-3.5 h-3.5" />
                               <span>Aprovar</span>
@@ -624,15 +649,15 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                           {rev.status === 'approved' && (
                             <button
                               onClick={() => handleReviewStatus(rev.id, 'pending')}
-                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-colors"
+                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
                             >
                               Tornar Pendente
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteReview(rev.id)}
-                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                            title="Excluir"
+                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -644,7 +669,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
               </div>
             )}
 
-            {/* Tab 3: Store Settings & Google Sheets CSV */}
+            {/* Tab 3: Store Settings, Security, Password & Google Sheets */}
             {activeTab === 'settings' && (
               <form onSubmit={handleSaveSettings} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
                 
@@ -655,32 +680,73 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   </div>
                 )}
 
-                {/* Google Sheets CSV Link */}
+                {/* Exclusive Admin Security Box */}
+                <div className="p-4 rounded-2xl bg-brand-cream/80 border-2 border-brand/30 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-brand" />
+                    <h4 className="font-serif font-bold text-sm text-brand-dark">
+                      Segurança de Acesso (Seu Utilizador e Palavra-passe)
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-atelier-600">
+                    Aqui pode alterar os seus dados para que <strong>somente você</strong> tenha acesso ao painel de administração:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-atelier-700 mb-1">
+                        Novo Nome de Utilizador (Atual: {currentAdminUser})
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Deixe em branco para manter"
+                        value={settingsForm.newUsername}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, newUsername: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-atelier-700 mb-1">
+                        Nova Palavra-passe Pessoal
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Mínimo de 6 caracteres"
+                        value={settingsForm.newPassword}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, newPassword: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Google Sheets CSV Link for CTT Shipping */}
                 <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-2">
                   <label className="block font-bold text-brand-dark text-sm">
-                    Link CSV Publicado do Google Sheets (Cálculo de Frete)
+                    Link CSV da Planilha de Custos & Fretes (Google Sheets)
                   </label>
                   <p className="text-atelier-500 text-[11px]">
-                    No Google Sheets: Arquivo &gt; Compartilhar &gt; Publicar na Web &gt; Formato CSV. Cole o link abaixo:
+                    Planilha oficial conectada com valores de fretes CTT e custos:
                   </p>
                   <input
                     type="url"
-                    placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+                    placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
                     value={settingsForm.googleSheetsCsvUrl}
                     onChange={(e) => setSettingsForm({ ...settingsForm, googleSheetsCsvUrl: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand font-mono"
                   />
                 </div>
 
-                {/* WhatsApp & Production Days */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* WhatsApp & Email & Production Days */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-bold text-atelier-700 mb-1">
-                      WhatsApp da Loja para Receber Pedidos
+                      WhatsApp Oficial (+351...)
                     </label>
                     <input
                       type="text"
-                      placeholder="Ex: 5541999999999"
+                      placeholder="351965639401"
                       value={settingsForm.whatsapp}
                       onChange={(e) => setSettingsForm({ ...settingsForm, whatsapp: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
@@ -689,7 +755,20 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
                   <div>
                     <label className="block font-bold text-atelier-700 mb-1">
-                      Média de Dias para Produção
+                      Email Oficial de Contacto
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="kmpersonalisados@gmail.com"
+                      value={settingsForm.email}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-atelier-700 mb-1">
+                      Dias Úteis de Confecção
                     </label>
                     <input
                       type="number"
@@ -702,75 +781,6 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   </div>
                 </div>
 
-                {/* Texts */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="block font-bold text-atelier-700 mb-1">
-                      Texto Informativo de Envio & Embalagem
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={settingsForm.shippingInfoText}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, shippingInfoText: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-atelier-700 mb-1">
-                      Instruções de Cuidados com os Bótons
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={settingsForm.careInstructions}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, careInstructions: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
-                    />
-                  </div>
-                </div>
-
-                {/* Kit Pricing Config */}
-                <div className="space-y-3 pt-2 border-t border-atelier-100">
-                  <h4 className="font-bold text-brand-dark text-sm">
-                    Preços dos Kits de Bótons
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {settingsForm.kits.map((kit, idx) => (
-                      <div key={kit.id || idx} className="p-3 bg-atelier-50 rounded-xl border border-atelier-200 space-y-2">
-                        <span className="font-bold text-brand-dark block">{kit.name} ({kit.units} un)</span>
-                        <div className="flex items-center gap-2">
-                          <label className="text-atelier-500">Preço (R$):</label>
-                          <input
-                            type="number"
-                            step="0.50"
-                            value={kit.price}
-                            onChange={(e) => {
-                              const updated = [...settingsForm.kits];
-                              updated[idx].price = parseFloat(e.target.value) || 0;
-                              setSettingsForm({ ...settingsForm, kits: updated });
-                            }}
-                            className="w-24 px-2 py-1 rounded border border-atelier-300"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Change Admin Password */}
-                <div className="pt-2 border-t border-atelier-100">
-                  <label className="block font-bold text-atelier-700 mb-1">
-                    Nova Senha de Acesso ao Painel (Deixe em branco para manter a atual)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={settingsForm.newPassword}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, newPassword: e.target.value })}
-                    className="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
-                  />
-                </div>
-
                 {/* Save Button */}
                 <button
                   type="submit"
@@ -778,7 +788,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   className="px-6 py-3 bg-brand hover:bg-brand-dark text-atelier-50 font-bold rounded-xl shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{savingSettings ? 'Salvando...' : 'Salvar Alterações'}</span>
+                  <span>{savingSettings ? 'A guardar...' : 'Guardar Todas as Alterações'}</span>
                 </button>
 
               </form>

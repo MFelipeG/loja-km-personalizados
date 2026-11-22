@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import CartCheckout from './components/CartCheckout';
 import OrderTrackingModal from './components/OrderTrackingModal';
 import AdminPanel from './components/AdminPanel';
+import TermsModal from './components/TermsModal';
 
 export default function App() {
   const [settings, setSettings] = useState(null);
@@ -20,6 +21,7 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
 
   // Fetch store settings on mount
   const loadSettings = async () => {
@@ -37,19 +39,17 @@ export default function App() {
   useEffect(() => {
     loadSettings();
 
-    // Check if URL has #admin
-    if (window.location.hash === '#admin') {
-      setIsAdminOpen(true);
-    }
-
-    const handleHashChange = () => {
+    const checkHash = () => {
       if (window.location.hash === '#admin') {
         setIsAdminOpen(true);
+      } else if (window.location.hash === '#termos' || window.location.hash === '#privacidade') {
+        setIsTermsOpen(true);
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
   // Smooth scroll helper
@@ -75,6 +75,7 @@ export default function App() {
         onOpenTracking={() => setIsTrackingOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenCart={() => setIsCartOpen(true)}
+        onOpenTerms={() => setIsTermsOpen(true)}
         onScrollToStudio={scrollToStudio}
       />
 
@@ -100,7 +101,7 @@ export default function App() {
           settings={settings}
         />
 
-        {/* Deadlines, Shipping & Care */}
+        {/* Deadlines, CTT Shipping & Care */}
         <DeadlinesShipping
           settings={settings}
         />
@@ -118,6 +119,7 @@ export default function App() {
       <Footer
         settings={settings}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenTerms={() => setIsTermsOpen(true)}
       />
 
       {/* Cart & Checkout Modal */}
@@ -127,6 +129,7 @@ export default function App() {
         items={items}
         targetKit={targetKit}
         settings={settings}
+        onOpenTerms={() => setIsTermsOpen(true)}
       />
 
       {/* Order Tracking Modal */}
@@ -145,6 +148,17 @@ export default function App() {
           }
         }}
         onSettingsUpdated={loadSettings}
+      />
+
+      {/* Terms, Privacy Policy & Refund Modal */}
+      <TermsModal
+        isOpen={isTermsOpen}
+        onClose={() => {
+          setIsTermsOpen(false);
+          if (window.location.hash === '#termos' || window.location.hash === '#privacidade') {
+            history.replaceState(null, '', ' ');
+          }
+        }}
       />
     </div>
   );

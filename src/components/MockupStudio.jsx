@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Eye,
   Layers,
-  RotateCw
+  RotateCw,
+  Gift
 } from 'lucide-react';
 import { saveDraftPhotos, getDraftPhotos } from '../utils/storage';
 
@@ -58,11 +59,10 @@ export default function MockupStudio({
   // Process uploaded files with quality check
   const handleFiles = (files) => {
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const newItems = [];
 
     Array.from(files).forEach((file) => {
       if (!validTypes.includes(file.type)) {
-        alert(`Arquivo "${file.name}" não aceito. Apenas imagens JPG, PNG ou WEBP são permitidas.`);
+        alert(`Ficheiro "${file.name}" não aceite. Apenas imagens JPG, PNG ou WEBP são permitidas.`);
         return;
       }
 
@@ -148,7 +148,7 @@ export default function MockupStudio({
   };
 
   // Kit calculation & progress
-  const targetUnits = targetKit ? targetKit.units : 12;
+  const targetUnits = targetKit ? targetKit.units : 6;
   const currentCount = items.length;
   const progressPercent = Math.min(100, Math.round((currentCount / targetUnits) * 100));
   const remainingForKit = Math.max(0, targetUnits - currentCount);
@@ -156,7 +156,7 @@ export default function MockupStudio({
   // 3D Tilt calculation
   const handleSimMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 22; // -11 to +11 deg
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 22;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * -22;
     setTilt({ x, y });
   };
@@ -176,33 +176,39 @@ export default function MockupStudio({
             <span>Estúdio Web-to-Print Interativo</span>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark">
-            Personalize Seus Bótons Ímãs
+            Personalize os Seus Bótons Ímãs
           </h2>
           <p className="text-atelier-600 text-sm sm:text-base">
-            Envie suas fotos, confira o selo automático de qualidade e visualize o resultado realista em 3D antes de finalizar!
+            Envie as suas fotografias, verifique a resolução automática e veja o resultado realista em 3D antes de encomendar.
           </p>
         </div>
 
-        {/* Target Kit Progress Banner */}
-        <div className="mb-10 max-w-3xl mx-auto bg-white rounded-2xl p-4 sm:p-5 border border-atelier-200 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+        {/* Progress & Target Banner */}
+        <div className="mb-10 max-w-3xl mx-auto bg-white rounded-2xl p-4 sm:p-5 border border-atelier-200 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-xs uppercase font-bold tracking-wider text-atelier-500">
-                Progresso do Pedido
+                Progresso da Encomenda (Mínimo: 2 unidades)
               </span>
               <h4 className="text-base font-bold text-brand-dark">
-                {currentCount} de {targetUnits} fotos adicionadas {targetKit ? `(${targetKit.name})` : '(Folha A4: 12 unidades)'}
+                {currentCount} {currentCount === 1 ? 'foto adicionada' : 'fotos adicionadas'}
+                {targetKit ? ` • Meta: ${targetKit.name}` : ' • Meta: Promoção 5+1 Grátis (6 un)'}
               </h4>
             </div>
-            <div className="text-right">
-              {remainingForKit > 0 ? (
+            <div>
+              {currentCount < 2 ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-200">
-                  Faltam {remainingForKit} para fechar o kit!
+                  Adicione pelo menos 2 fotos (mínimo)
+                </span>
+              ) : currentCount >= 5 && currentCount <= 6 ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 text-rose-800 text-xs font-bold border border-rose-200">
+                  <Gift className="w-3.5 h-3.5 text-rose-600" />
+                  Promoção 5 + 1 de Brinde Ativa! (25 €)
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
                   <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  Kit Completo!
+                  Quantidade Pronta!
                 </span>
               )}
             </div>
@@ -212,34 +218,28 @@ export default function MockupStudio({
           <div className="w-full bg-atelier-100 rounded-full h-3 overflow-hidden">
             <div
               className={`h-full transition-all duration-300 rounded-full ${
-                remainingForKit === 0
+                currentCount >= 5
                   ? 'bg-emerald-600'
                   : 'bg-gradient-to-r from-brand-light to-brand'
               }`}
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: `${Math.min(100, Math.max(10, progressPercent))}%` }}
             />
           </div>
 
-          {/* Kit quick-change recommendations */}
-          <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-atelier-100 text-xs text-atelier-600">
-            <span className="font-semibold text-atelier-800">Mudar meta:</span>
+          {/* Quick-choice chips */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-atelier-100 text-xs text-atelier-600">
+            <span className="font-semibold text-atelier-800">Sugestões rápidas:</span>
             <button
-              onClick={() => setItems((p) => p.slice(0, 6))}
-              className="px-2 py-0.5 rounded bg-atelier-100 hover:bg-atelier-200 text-atelier-700"
+              onClick={() => setItems((p) => p.slice(0, 2))}
+              className="px-2.5 py-1 rounded-lg bg-atelier-100 hover:bg-atelier-200 text-atelier-700 cursor-pointer font-medium"
             >
-              Kit 6
+              2 Bótons (12 €)
             </button>
             <button
               onClick={() => {}}
-              className="px-2 py-0.5 rounded bg-brand/10 text-brand font-bold"
+              className="px-2.5 py-1 rounded-lg bg-brand/10 text-brand font-bold cursor-pointer"
             >
-              Kit 12 (Folha Inteira)
-            </button>
-            <button
-              onClick={() => {}}
-              className="px-2 py-0.5 rounded bg-atelier-100 hover:bg-atelier-200 text-atelier-700"
-            >
-              Kit 24 (2 Folhas)
+              5 + 1 Brinde (25 €)
             </button>
           </div>
         </div>
@@ -274,10 +274,10 @@ export default function MockupStudio({
                 <Upload className="w-7 h-7" />
               </div>
               <h3 className="font-serif text-lg font-bold text-brand-dark">
-                Clique ou arraste suas fotos aqui
+                Clique ou arraste as suas fotografias aqui
               </h3>
               <p className="text-xs text-atelier-600 mt-1 max-w-sm mx-auto">
-                Selecione várias fotos de uma só vez do seu celular ou computador (JPG, PNG ou WEBP).
+                Selecione várias fotos de uma só vez do telemóvel ou computador (JPG, PNG ou WEBP).
               </p>
               <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-800">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -289,12 +289,12 @@ export default function MockupStudio({
             {items.length > 0 && (
               <div className="bg-white rounded-3xl p-4 border border-atelier-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-atelier-700 px-1">
-                  <span>Fotos no Pedido ({items.length})</span>
+                  <span>Fotos na Encomenda ({items.length})</span>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-brand hover:underline flex items-center gap-1"
+                    className="text-brand hover:underline flex items-center gap-1 cursor-pointer font-bold"
                   >
-                    + Adicionar Mais
+                    + Adicionar Mais Fotos
                   </button>
                 </div>
 
@@ -316,11 +316,9 @@ export default function MockupStudio({
                           alt={`Foto ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
-                        {/* Number badge */}
                         <span className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                           {idx + 1}
                         </span>
-                        {/* Quality indicator dot */}
                         <span
                           className={`absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full border border-white ${
                             it.qualityBadge === 'excellent' ? 'bg-emerald-500' : 'bg-amber-500'
@@ -348,7 +346,7 @@ export default function MockupStudio({
                     </span>
                   </div>
 
-                  {/* Quality Badge (Green / Yellow) */}
+                  {/* Quality Badge */}
                   <div
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
                       selectedItem.qualityBadge === 'excellent'
@@ -454,7 +452,7 @@ export default function MockupStudio({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handleDuplicate}
-                        className="px-3 py-1.5 rounded-lg bg-atelier-100 hover:bg-atelier-200 text-atelier-800 font-semibold flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-atelier-100 hover:bg-atelier-200 text-atelier-800 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                         title="Duplicar foto para fazer mais de uma unidade igual"
                       >
                         <Copy className="w-3.5 h-3.5 text-brand" />
@@ -462,7 +460,7 @@ export default function MockupStudio({
                       </button>
                       <button
                         onClick={() => updateSelected({ zoom: 1.0, panX: 0, panY: 0, blur: 8 })}
-                        className="px-3 py-1.5 rounded-lg text-atelier-600 hover:bg-atelier-100 transition-colors"
+                        className="px-3 py-1.5 rounded-lg text-atelier-600 hover:bg-atelier-100 transition-colors cursor-pointer"
                       >
                         Resetar Enquadramento
                       </button>
@@ -470,7 +468,7 @@ export default function MockupStudio({
 
                     <button
                       onClick={() => handleDelete(selectedIndex)}
-                      className="px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Excluir Foto</span>
@@ -494,12 +492,12 @@ export default function MockupStudio({
                     Simulador 3D do Bóton
                   </h3>
                   <p className="text-xs text-atelier-500">
-                    Passe o mouse ou toque para inclinar e testar a textura
+                    Passe o rato ou toque para inclinar e testar o relevo
                   </p>
                 </div>
                 <button
                   onClick={() => setShowSafeGuide(!showSafeGuide)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1 transition-colors ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1 transition-colors cursor-pointer ${
                     showSafeGuide
                       ? 'bg-brand/10 text-brand border-brand/20'
                       : 'bg-atelier-100 text-atelier-600 border-atelier-200'
@@ -516,7 +514,6 @@ export default function MockupStudio({
                 onMouseMove={handleSimMouseMove}
                 onMouseLeave={handleSimMouseLeave}
               >
-                {/* Subtle metallic texture */}
                 <div className="absolute inset-0 bg-[radial-gradient(#C5B6A8_1px,transparent_1px)] [background-size:14px_14px] opacity-20 pointer-events-none" />
 
                 {selectedItem ? (
@@ -576,7 +573,7 @@ export default function MockupStudio({
                       Nenhuma foto enviada ainda
                     </p>
                     <p className="text-xs text-atelier-500">
-                      Faça o upload ao lado para ver seu bóton quadrado neste simulador realista.
+                      Faça o upload ao lado para ver o seu bóton quadrado neste simulador realista.
                     </p>
                   </div>
                 )}
@@ -586,25 +583,31 @@ export default function MockupStudio({
               <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 text-xs text-atelier-700 space-y-1.5">
                 <div className="font-bold text-brand-dark flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-brand" />
-                  <span>Entenda a Tecnologia de 2 Camadas:</span>
+                  <span>Tecnologia de 2 Camadas:</span>
                 </div>
                 <p className="leading-relaxed text-atelier-600">
-                  • <strong>6,1 cm externo:</strong> O fundo borrado preenche toda a margem de dobra da matriz metálica, sem criar bordas brancas feias.
+                  • <strong>6,1 cm externo:</strong> O fundo borrado preenche toda a margem de dobra da matriz metálica, sem criar bordas brancas.
                 </p>
                 <p className="leading-relaxed text-atelier-600">
-                  • <strong>5,0 cm interno:</strong> A área frontal permanece 100% nítida e segura, garantindo que o rosto ou elemento principal fique perfeitamente visível.
+                  • <strong>5,0 cm interno:</strong> A sua foto principal permanece 100% nítida e segura, sem cortes de rostos.
                 </p>
               </div>
 
               {/* Advance to Checkout CTA Button */}
               <button
-                disabled={items.length === 0}
+                disabled={items.length < 2}
                 onClick={onOpenCheckout}
                 className="w-full py-4 px-6 rounded-2xl bg-brand hover:bg-brand-dark disabled:bg-atelier-300 disabled:cursor-not-allowed text-atelier-50 font-bold text-base shadow-tactile transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 cursor-pointer"
               >
-                <span>Avançar para a Sacola & Frete ({items.length})</span>
+                <span>Avançar para a Sacola ({items.length} {items.length === 1 ? 'bóton' : 'bótons'})</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
+
+              {items.length < 2 && (
+                <p className="text-[11px] text-center text-amber-700 font-medium">
+                  * Pedido mínimo de 2 unidades para avançar.
+                </p>
+              )}
 
             </div>
 

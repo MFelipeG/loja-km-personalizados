@@ -1,49 +1,58 @@
 {
   "settings": {
     "storeName": "KM Personalizados",
-    "whatsapp": "5541999999999",
+    "whatsapp": "351965639401",
     "instagram": "https://www.instagram.com/km_personalisado?jplx=NzlqdWsxdXljcWw=",
     "tiktok": "https://www.tiktok.com/@km_personalizado?_r=1&_t=ZG-9Bcw9tWOna4",
     "productionDays": 3,
     "shippingInfoText": "Enviamos para todo o Brasil via Correios (PAC/Sedex) ou Motoboy local. Embalagem reforçada anti-impacto para garantir que seus ímãs cheguem impecáveis!",
     "careInstructions": "Limpe apenas com pano seco ou levemente umedecido em água. Não use álcool nem produtos abrasivos. Evite exposição prolongada ao sol intenso.",
-    "googleSheetsCsvUrl": "",
+    "googleSheetsCsvUrl": "https://docs.google.com/spreadsheets/d/1e4iCyvMsLaz2zGzrW0mqcosvbHDLmhwdpnbuXzeoSxo/export?format=csv",
     "kits": [
       {
-        "id": "avulso",
-        "name": "Avulso",
-        "units": 1,
-        "price": 6,
-        "originalPrice": 8,
-        "badge": "Para experimentar",
-        "highlight": false
+        "id": "minimo-2",
+        "name": "Pedido Mínimo (2 Bótons)",
+        "units": 2,
+        "price": 12,
+        "unitPrice": 6,
+        "originalPrice": 14,
+        "badge": "Pedido Mínimo",
+        "highlight": false,
+        "description": "Mínimo de 2 unidades por encomenda (6,00 € cada). Ideal para experimentar a qualidade do ateliê."
       },
       {
-        "id": "kit-6",
-        "name": "Kit 6 Unidades",
+        "id": "promo-inauguracao",
+        "name": "Promoção de Inauguração (5 + 1 Grátis)",
         "units": 6,
-        "price": 27,
+        "chargeUnits": 5,
+        "price": 25,
+        "unitPrice": 4.17,
         "originalPrice": 36,
-        "badge": "Popular",
-        "highlight": false
+        "badge": "🎉 1 DE BRINDE (Mais Pedido)",
+        "highlight": true,
+        "description": "Pague 5 unidades (25,00 €) e LEVE 1 DE BRINDE! Total de 6 bótons ímãs quadrados com brilho especial."
       },
       {
         "id": "kit-12",
         "name": "Kit 12 Unidades (Folha Inteira)",
         "units": 12,
-        "price": 48,
-        "originalPrice": 72,
-        "badge": "Mais Vendido ⭐",
-        "highlight": true
+        "price": 45,
+        "unitPrice": 3.75,
+        "badge": "Sob Consulta / Em Breve",
+        "highlight": false,
+        "isPending": true,
+        "description": "Preenche 1 folha A4 completa. Preço especial em definição pela equipa do ateliê."
       },
       {
         "id": "kit-24",
         "name": "Kit 24 Unidades (2 Folhas)",
         "units": 24,
-        "price": 89,
-        "originalPrice": 144,
-        "badge": "Melhor Custo-Benefício 🚀",
-        "highlight": false
+        "price": 80,
+        "unitPrice": 3.33,
+        "badge": "Sob Consulta / Em Breve",
+        "highlight": false,
+        "isPending": true,
+        "description": "2 folhas A4 completas. Preço promocional em breve."
       }
     ],
     "upcomingProducts": [
@@ -64,6 +73,39 @@
         "title": "Ímãs Estilo Polaroid Vintage",
         "description": "Ímãs retangulares com borda branca retrô e legenda personalizada.",
         "icon": "Camera"
+      }
+    ],
+    "email": "kmpersonalisados@gmail.com",
+    "currency": "€",
+    "country": "Portugal",
+    "shippingMethods": [
+      {
+        "id": "ctt-verde",
+        "name": "CTT Correio Verde (Almofadada M)",
+        "fee": 2.7,
+        "days": 2,
+        "desc": "Económico e rápido para Portugal Continental e Ilhas"
+      },
+      {
+        "id": "ctt-registado",
+        "name": "CTT Correio Registado (Com Rastreio)",
+        "fee": 3.2,
+        "days": 1,
+        "desc": "Entrega segura em mão com código de rastreio oficial CTT"
+      },
+      {
+        "id": "inpost-locker",
+        "name": "InPost (Cacifo Automático 24h)",
+        "fee": 3.85,
+        "days": 3,
+        "desc": "Levantamento cómodo a qualquer hora num cacifo perto de si"
+      },
+      {
+        "id": "levantamento-local",
+        "name": "Levantamento em Mãos",
+        "fee": 0,
+        "days": 1,
+        "desc": "Grátis - Combinar entrega local diretamente no WhatsApp"
       }
     ]
   },
