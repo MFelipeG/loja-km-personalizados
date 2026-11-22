@@ -1,0 +1,104 @@
+{
+  "settings": {
+    "storeName": "KM Personalizados",
+    "whatsapp": "5541999999999",
+    "instagram": "https://www.instagram.com/km_personalisado?jplx=NzlqdWsxdXljcWw=",
+    "tiktok": "https://www.tiktok.com/@km_personalizado?_r=1&_t=ZG-9Bcw9tWOna4",
+    "productionDays": 3,
+    "shippingInfoText": "Enviamos para todo o Brasil via Correios (PAC/Sedex) ou Motoboy local. Embalagem reforçada anti-impacto para garantir que seus ímãs cheguem impecáveis!",
+    "careInstructions": "Limpe apenas com pano seco ou levemente umedecido em água. Não use álcool nem produtos abrasivos. Evite exposição prolongada ao sol intenso.",
+    "googleSheetsCsvUrl": "",
+    "kits": [
+      {
+        "id": "avulso",
+        "name": "Avulso",
+        "units": 1,
+        "price": 6,
+        "originalPrice": 8,
+        "badge": "Para experimentar",
+        "highlight": false
+      },
+      {
+        "id": "kit-6",
+        "name": "Kit 6 Unidades",
+        "units": 6,
+        "price": 27,
+        "originalPrice": 36,
+        "badge": "Popular",
+        "highlight": false
+      },
+      {
+        "id": "kit-12",
+        "name": "Kit 12 Unidades (Folha Inteira)",
+        "units": 12,
+        "price": 48,
+        "originalPrice": 72,
+        "badge": "Mais Vendido ⭐",
+        "highlight": true
+      },
+      {
+        "id": "kit-24",
+        "name": "Kit 24 Unidades (2 Folhas)",
+        "units": 24,
+        "price": 89,
+        "originalPrice": 144,
+        "badge": "Melhor Custo-Benefício 🚀",
+        "highlight": false
+      }
+    ],
+    "upcomingProducts": [
+      {
+        "id": "botons-redondos",
+        "title": "Bótons Redondos Clássicos",
+        "description": "O clássico bóton americano com alfinete de segurança e acabamento espelhado.",
+        "icon": "Circle"
+      },
+      {
+        "id": "chaveiros-acrilico",
+        "title": "Chaveiros Acrílicos Foto",
+        "description": "Chaveiros transparentes em acrílico resistente com sua foto frente e verso.",
+        "icon": "Key"
+      },
+      {
+        "id": "imas-polaroid",
+        "title": "Ímãs Estilo Polaroid Vintage",
+        "description": "Ímãs retangulares com borda branca retrô e legenda personalizada.",
+        "icon": "Camera"
+      }
+    ]
+  },
+  "admin": {
+    "username": "admin",
+    "passwordHash": "$2b$10$HxW6oBlBD55R7nVEKR/xi.0i9eR3VhNvqzMTkK.90VaMMK1UdnmTW"
+  },
+  "orders": [],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "name": "Mariana Silva",
+      "rating": 5,
+      "comment": "Ficaram perfeitos na minha geladeira! A qualidade da foto e o brilho do acabamento são surreais. Já vou pedir mais para presentear minha mãe.",
+      "photoUrl": "/assets/logo-km.jpg",
+      "status": "approved",
+      "createdAt": "2026-11-15T14:20:00Z"
+    },
+    {
+      "id": "rev-2",
+      "name": "Carlos Eduardo",
+      "rating": 5,
+      "comment": "Chegou super rápido e muito bem embalado. O ímã tem uma força excelente, não escorrega de jeito nenhum. Recomendo de olhos fechados!",
+      "photoUrl": null,
+      "status": "approved",
+      "createdAt": "2026-11-18T10:15:00Z"
+    },
+    {
+      "id": "rev-3",
+      "name": "Beatriz Santos",
+      "rating": 5,
+      "comment": "Amei a borda borrada! Nenhuma foto cortou rosto ou detalhes importantes. Atendimento pelo WhatsApp nota 1000!",
+      "photoUrl": null,
+      "status": "approved",
+      "createdAt": "2026-11-20T18:40:00Z"
+    }
+  ]
+}
