@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    background-color: #FAF7F2;
+    color: #38261B;
+  }
+}
+
+/* Custom 3D perspective for tactile tilt effect */
+.perspective-container {
+  perspective: 1000px;
+}
+
+.magnet-3d-card {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Realistic lamination & gloss sheen */
+.magnet-gloss {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
+  pointer-events: none;
+}
+
+/* Custom delicate scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8C6B6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #BAA18D;
+}
+
+/* ========================================================
+   REGRAS DE IMPRESSÃO PROFISSIONAL A4 (100% ESCALA REAL)
+   ======================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Oculta toda a interface de usuário */
+  header, footer, nav, button, .no-print, .toast-container, #admin-sidebar, .modal-backdrop {
+    display: none !important;
+  }
+
+  /* Exibe exclusivamente as folhas A4 de impressão */
+  .print-only-container {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    position: relative !important;
+    overflow: hidden !important;
+    background: #FFFFFF !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
