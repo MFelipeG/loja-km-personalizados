@@ -28,7 +28,7 @@ export default function Hero({ onScrollToStudio, settings }) {
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-atelier-200/80 border border-atelier-300/60 text-xs sm:text-sm font-semibold text-brand-leather">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              <span>Promoção de Inauguração: 5 Bótons por 25 € + 1 de Brinde! 🇵🇹</span>
+              <span>Promoção de Inauguração: 5 Bótons por 25 € + 1 de Brinde!</span>
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-dark tracking-tight leading-[1.15]">
@@ -56,7 +56,7 @@ export default function Hero({ onScrollToStudio, settings }) {
               <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 border border-atelier-200 shadow-xs">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                 <span className="text-xs font-semibold text-atelier-800">
-                  Envio CTT Rápido para Portugal
+                  Envio CTT Rápido para Todo o País
                 </span>
               </div>
             </div>
@@ -79,10 +79,10 @@ export default function Hero({ onScrollToStudio, settings }) {
               </a>
             </div>
 
-            {/* Sub-note */}
+            {/* Sub-note without phone number */}
             <p className="text-xs text-atelier-500 flex items-center justify-center lg:justify-start gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Sem necessidade de registo ou login. Fechamento seguro pelo WhatsApp (+351 965 639 401).</span>
+              <span>Sem necessidade de registo ou login. Fechamento seguro direto pelo WhatsApp.</span>
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function Hero({ onScrollToStudio, settings }) {
                 <span>Simulador de Frigorífico 3D</span>
               </div>
 
-              {/* 4 REALISTIC SAMPLE MAGNETS (Fitted properly in the square without text cut-offs) */}
+              {/* 4 REALISTIC SAMPLE MAGNETS */}
               <div
                 className="my-auto grid grid-cols-2 gap-4 magnet-3d-card relative z-10 pt-4"
                 style={{
@@ -111,12 +111,10 @@ export default function Hero({ onScrollToStudio, settings }) {
               >
                 {/* Magnet 1: Family Portrait */}
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-magnet border border-white/70 bg-white group hover:scale-105 transition-transform duration-200">
-                  {/* Blurred bleed background */}
                   <div
                     className="absolute inset-0 bg-cover bg-center filter blur-[6px] scale-110"
                     style={{ backgroundImage: 'url(/assets/sample-family.jpg)' }}
                   />
-                  {/* Centered sharp safe area */}
                   <div className="absolute inset-2.5 rounded-xl overflow-hidden border border-white/50 shadow-inner">
                     <img
                       src="/assets/sample-family.jpg"
@@ -124,7 +122,6 @@ export default function Hero({ onScrollToStudio, settings }) {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {/* Gloss sheen */}
                   <div className="absolute inset-0 magnet-gloss rounded-2xl pointer-events-none" />
                   <div className="absolute bottom-1 right-2 text-[9px] font-bold text-white drop-shadow">
                     Família

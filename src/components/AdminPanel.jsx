@@ -341,18 +341,8 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 Acesso à Gestão do Ateliê
               </h4>
               <p className="text-xs text-atelier-500 mt-1">
-                Área reservada aos fundadores da KM Personalizados. Os clientes não necessitam de login.
+                Área reservada à equipa da KM Personalizados.
               </p>
-            </div>
-
-            {/* Quick credentials helper banner */}
-            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-left text-xs text-amber-900 space-y-1">
-              <span className="font-bold block">🔑 Seus Dados de Acesso Padrão:</span>
-              <p>• <strong>Utilizador:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-amber-300">admin</code></p>
-              <p>• <strong>Palavra-passe:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-amber-300">admin123</code></p>
-              <span className="text-[10px] text-amber-700 block mt-1">
-                * Poderá alterar o seu utilizador e palavra-passe na aba "Configurações" após entrar!
-              </span>
             </div>
 
             {loginError && (

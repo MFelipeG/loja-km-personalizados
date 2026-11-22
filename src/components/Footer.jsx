@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, ShieldCheck, Lock, Sparkles, MapPin, Mail, Phone, FileText } from 'lucide-react';
+import { Heart, ShieldCheck, Mail, FileText } from 'lucide-react';
 import { InstagramIcon, TikTokIcon } from './Icons';
 
 export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
@@ -11,11 +11,11 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white p-1 overflow-hidden border border-brand-light/40 shadow-xs flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full overflow-hidden border border-brand-light/20 shrink-0">
                 <img
                   src="/assets/logo-km.jpg"
                   alt="KM Personalizados"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div>
@@ -23,7 +23,7 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                   KM Personalizados
                 </span>
                 <span className="text-[11px] text-brand-light font-medium block">
-                  Ateliê de Bótons Ímãs Quadrados • Portugal 🇵🇹
+                  Ateliê de Bótons & Ímãs de Fotos
                 </span>
               </div>
             </div>
@@ -32,18 +32,12 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
               Transformamos as suas melhores fotografias em bótons ímãs quadrados com laminação brilhante e tecnologia de fundo borrado 6,1cm. Encomendas personalizadas com envio CTT para todo o país.
             </p>
 
-            {/* Direct Contacts */}
+            {/* Email Contact (Phone removed from public display as requested) */}
             <div className="space-y-1.5 text-xs text-atelier-300 pt-1">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-brand-light" />
                 <a href="mailto:kmpersonalisados@gmail.com" className="hover:underline">
                   kmpersonalisados@gmail.com
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-brand-light" />
-                <a href="https://wa.me/351965639401" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                  +351 965 639 401 (WhatsApp)
                 </a>
               </div>
             </div>
@@ -124,7 +118,7 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                 <span>Fotos Apagadas Após Entrega</span>
               </div>
               <p className="text-[11px] leading-relaxed text-atelier-400">
-                Não retemos as suas imagens. Após a expedição e receção da encomenda, as fotos são apagadas dos nossos ficheiros.
+                Não retemos as suas imagens. Após a expedição e receção da encomenda, as fotos são permanentemente apagadas dos nossos ficheiros.
               </p>
               <div className="pt-1">
                 <button
@@ -135,24 +129,23 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                   <span>Ver Política de Reembolso Completa</span>
                 </button>
               </div>
-
-              <div className="pt-3 border-t border-atelier-800">
-                <button
-                  onClick={onOpenAdmin}
-                  className="text-atelier-500 hover:text-atelier-300 flex items-center gap-1.5 text-[11px] transition-colors cursor-pointer"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Acesso da Equipa (/admin)</span>
-                </button>
-              </div>
             </div>
           </div>
 
         </div>
 
-        {/* Bottom copyright */}
+        {/* Bottom copyright (with discreet hidden admin shortcut on the © symbol) */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-atelier-500 gap-4">
-          <p>© {new Date().getFullYear()} KM Personalizados. Portugal. Todos os direitos reservados.</p>
+          <p>
+            <span
+              onClick={onOpenAdmin}
+              title="KM Personalizados"
+              className="cursor-default select-none"
+            >
+              ©
+            </span>{' '}
+            {new Date().getFullYear()} KM Personalizados. Todos os direitos reservados.
+          </p>
           <p className="flex items-center gap-1 text-atelier-400">
             <span>Feito com</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-current" />
