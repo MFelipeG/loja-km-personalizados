@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Heart, Camera } from 'lucide-react';
 
-export default function Hero({ onScrollToStudio, settings }) {
+export default function Hero({ onScrollToStudio, settings, onOpenFridgeSimulator }) {
   // State for interactive mouse/touch tilt on the hero fridge magnets
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
@@ -40,16 +40,11 @@ export default function Hero({ onScrollToStudio, settings }) {
 
   const handleSimulatorClick = (e) => {
     if (e) e.stopPropagation();
-    // Interactive 3D tilt wave demonstration
-    setTilt({ x: 14, y: -9 });
-    setTimeout(() => setTilt({ x: -14, y: 9 }), 180);
-    setTimeout(() => setTilt({ x: 7, y: -4 }), 360);
-    setTimeout(() => {
-      setTilt({ x: 0, y: 0 });
-      if (onScrollToStudio) {
-        onScrollToStudio();
-      }
-    }, 550);
+    if (onOpenFridgeSimulator) {
+      onOpenFridgeSimulator();
+    } else if (onScrollToStudio) {
+      onScrollToStudio();
+    }
   };
 
   const handleCardClick = () => {

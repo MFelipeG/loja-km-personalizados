@@ -24,7 +24,8 @@ export default function MockupStudio({
   setItems,
   targetKit,
   onOpenCheckout,
-  settings
+  settings,
+  onOpenFridgeSimulator
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -158,6 +159,15 @@ export default function MockupStudio({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 22;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * -22;
+    setTilt({ x, y });
+  };
+
+  const handleSimTouchMove = (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width - 0.5) * 22;
+    const y = ((touch.clientY - rect.top) / rect.height - 0.5) * -22;
     setTilt({ x, y });
   };
 
@@ -486,35 +496,70 @@ export default function MockupStudio({
             
             <div className="bg-white rounded-3xl p-6 border border-atelier-200 shadow-tactile space-y-5">
               
-              <div className="flex items-center justify-between pb-3 border-b border-atelier-100">
+              <div className="flex items-center justify-between pb-3 border-b border-atelier-100 gap-2">
                 <div>
-                  <h3 className="font-serif font-bold text-lg text-brand-dark">
-                    Simulador 3D do Bóton
+                  <h3 className="font-serif font-bold text-base sm:text-lg text-brand-dark flex items-center gap-1.5">
+                    <span>Simulador no Frigorífico 3D</span>
                   </h3>
                   <p className="text-xs text-atelier-500">
-                    Passe o rato ou toque para inclinar e testar o relevo
+                    Veja o seu bóton fixado na porta do frigorífico em 3D
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowSafeGuide(!showSafeGuide)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1 transition-colors cursor-pointer ${
-                    showSafeGuide
-                      ? 'bg-brand/10 text-brand border-brand/20'
-                      : 'bg-atelier-100 text-atelier-600 border-atelier-200'
-                  }`}
-                >
-                  <Eye className="w-3 h-3" />
-                  <span>{showSafeGuide ? 'Linhas de Dobra Ativas' : 'Ocultar Linhas'}</span>
-                </button>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowSafeGuide(!showSafeGuide)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1 transition-colors cursor-pointer ${
+                      showSafeGuide
+                        ? 'bg-brand/10 text-brand border-brand/20'
+                        : 'bg-atelier-100 text-atelier-600 border-atelier-200'
+                    }`}
+                    title="Exibir ou ocultar linhas de dobra de 5,0 cm"
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span className="hidden sm:inline">{showSafeGuide ? 'Linhas Ativas' : 'Ocultar Linhas'}</span>
+                  </button>
+
+                  {onOpenFridgeSimulator && (
+                    <button
+                      type="button"
+                      onClick={onOpenFridgeSimulator}
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300/80 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                      title="Ver todos os bótons juntos na porta do frigorífico em 3D"
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Ver Frigorífico</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Realistic Fridge Magnetic Background with Tilt */}
+              {/* Realistic Fridge Door Container with Tilt */}
               <div
-                className="relative w-full aspect-square rounded-3xl bg-gradient-to-b from-[#F7F4EF] via-[#EBE5DC] to-[#DFD7CB] p-8 shadow-fridge border-2 border-white flex items-center justify-center overflow-hidden perspective-container select-none cursor-grab active:cursor-grabbing"
+                className="relative w-full aspect-square rounded-3xl bg-gradient-to-b from-[#EAEFF4] via-[#DCE2E9] to-[#C7CFD8] p-8 shadow-fridge border-4 border-[#C1C9D2] flex items-center justify-center overflow-hidden perspective-container select-none cursor-grab active:cursor-grabbing"
                 onMouseMove={handleSimMouseMove}
                 onMouseLeave={handleSimMouseLeave}
+                onTouchStart={handleSimTouchMove}
+                onTouchMove={handleSimTouchMove}
+                onTouchEnd={handleSimMouseLeave}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(#C5B6A8_1px,transparent_1px)] [background-size:14px_14px] opacity-20 pointer-events-none" />
+                {/* Brushed texture & subtle grid */}
+                <div className="absolute inset-0 bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:14px_14px] opacity-5 pointer-events-none" />
+
+                {/* Top Fridge Door Label */}
+                <div className="absolute top-2.5 left-3.5 flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-atelier-700/80 z-20 pointer-events-none">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs" />
+                  <span>Porta do Frigorífico • KM</span>
+                </div>
+
+                {/* Fridge Handle Indicator on the Right Side */}
+                <div
+                  className="absolute right-2.5 top-10 bottom-10 w-2.5 sm:w-3 rounded-full bg-gradient-to-b from-[#B8BFC8] via-[#E2E7ED] to-[#AAB2BC] border border-[#8F97A1] shadow-md z-20 pointer-events-none"
+                  style={{
+                    boxShadow: '3px 6px 10px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.7)'
+                  }}
+                />
 
                 {selectedItem ? (
                   /* 3D Magnet Card */

@@ -14,6 +14,7 @@ import OrderTrackingModal from './components/OrderTrackingModal';
 import AdminPanel from './components/AdminPanel';
 import TermsModal from './components/TermsModal';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import FridgeSimulatorModal from './components/FridgeSimulatorModal';
 
 export default function App() {
   const [settings, setSettings] = useState(null);
@@ -25,6 +26,7 @@ export default function App() {
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isFridgeSimulatorOpen, setIsFridgeSimulatorOpen] = useState(false);
 
   // Fetch store settings on mount
   const loadSettings = async () => {
@@ -87,6 +89,7 @@ export default function App() {
         <Hero
           onScrollToStudio={scrollToStudio}
           settings={settings}
+          onOpenFridgeSimulator={() => setIsFridgeSimulatorOpen(true)}
         />
 
         {/* Kits & Pricing Table */}
@@ -102,6 +105,7 @@ export default function App() {
           targetKit={targetKit}
           onOpenCheckout={() => setIsCartOpen(true)}
           settings={settings}
+          onOpenFridgeSimulator={() => setIsFridgeSimulatorOpen(true)}
         />
 
         {/* Deadlines, CTT Shipping & Care */}
@@ -167,6 +171,17 @@ export default function App() {
           if (window.location.hash === '#termos' || window.location.hash === '#privacidade') {
             history.replaceState(null, '', ' ');
           }
+        }}
+      />
+
+      {/* Interactive 3D Refrigerator Simulator Modal */}
+      <FridgeSimulatorModal
+        isOpen={isFridgeSimulatorOpen}
+        onClose={() => setIsFridgeSimulatorOpen(false)}
+        items={items}
+        onGoToStudio={() => {
+          setIsFridgeSimulatorOpen(false);
+          scrollToStudio();
         }}
       />
 
