@@ -21,7 +21,7 @@ export default function FAQSection({ settings, onOpenTerms }) {
             Ao selecionar o nosso <strong>Kit de 5 Bótons por 25 €</strong>, recebe automaticamente o <strong>6º bóton inteiramente de brinde</strong>!
           </p>
           <p>
-            Com este desconto de inauguração, cada bóton ímã sai por apenas <strong>4,17 €</strong> (em vez de 6,00 € da unidade individual). Todos os bótons incluem impressão fotográfica de alta nitidez, laminação brilhante protetora e super ímã traseiro.
+            Com este desconto de inauguração, cada bóton ímã sai por apenas <strong>4,17 €</strong> (em vez de 5,50 € da unidade individual). Todos os bótons incluem impressão fotográfica de alta nitidez, laminação brilhante protetora e super ímã traseiro (limite de 1 combo promocional por cliente/pedido).
           </p>
         </div>
       )

@@ -47,12 +47,12 @@ const defaultDb = {
         id: 'minimo-2',
         name: 'Pedido Mínimo (2 Bótons)',
         units: 2,
-        price: 12.00,
-        unitPrice: 6.00,
-        originalPrice: 14.00,
+        price: 11.00,
+        unitPrice: 5.50,
+        originalPrice: 13.00,
         badge: 'Pedido Mínimo',
         highlight: false,
-        description: 'Mínimo de 2 unidades por encomenda (6,00 € cada). Ideal para experimentar a qualidade do ateliê.'
+        description: 'Mínimo de 2 unidades por encomenda (5,50 € cada). Ideal para experimentar a qualidade do ateliê.'
       },
       {
         id: 'promo-inauguracao',
@@ -61,32 +61,21 @@ const defaultDb = {
         chargeUnits: 5,
         price: 25.00,
         unitPrice: 4.17,
-        originalPrice: 36.00,
+        originalPrice: 33.00,
         badge: '🎉 1 DE BRINDE (Mais Pedido)',
         highlight: true,
-        description: 'Pague 5 unidades (25,00 €) e LEVE 1 DE BRINDE! Total de 6 bótons ímãs quadrados com brilho especial.'
+        description: 'Pague 5 unidades (25,00 €) e LEVE 1 DE BRINDE! Total de 6 bótons ímãs quadrados (limite de 1 combo por cliente/pedido).'
       },
       {
-        id: 'kit-12',
-        name: 'Kit 12 Unidades (Folha Inteira)',
-        units: 12,
-        price: 45.00,
-        unitPrice: 3.75,
-        badge: 'Sob Consulta / Em Breve',
+        id: 'kit-eventos',
+        name: 'Kit Eventos (Mínimo 25 un.)',
+        units: 25,
+        price: 112.50,
+        unitPrice: 4.50,
+        originalPrice: 137.50,
+        badge: 'FESTAS & LEMBRANCINHAS',
         highlight: false,
-        isPending: true,
-        description: 'Preenche 1 folha A4 completa. Preço especial em definição pela equipa do ateliê.'
-      },
-      {
-        id: 'kit-24',
-        name: 'Kit 24 Unidades (2 Folhas)',
-        units: 24,
-        price: 80.00,
-        unitPrice: 3.33,
-        badge: 'Sob Consulta / Em Breve',
-        highlight: false,
-        isPending: true,
-        description: '2 folhas A4 completas. Preço promocional em breve.'
+        description: 'Preços especiais por quantidade a partir de 25 unidades para aniversários, casamentos e empresas.'
       }
     ],
     shippingMethods: [

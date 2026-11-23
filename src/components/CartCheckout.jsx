@@ -14,7 +14,8 @@ import {
   ArrowRight,
   Gift,
   Printer,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { saveOrderCode, clearDraftPhotos } from '../utils/storage';
@@ -55,33 +56,71 @@ export default function CartCheckout({
   const [completedOrder, setCompletedOrder] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Compute pricing in Euro (€)
+  // Compute pricing in Euro (€) with progressive and combo rules
   const count = items.length;
 
   // Pricing rules:
-  // Minimum 2 units = 12€ (6€/un)
-  // 3 units = 18€
-  // 4 units = 24€
-  // 5 or 6 units = 25€ (Promoção de Inauguração: 5 + 1 de brinde!)
-  // > 6 units = 25€ + (count - 6) * 5.00€
-  let subtotal = 12.00;
+  // - Minimum 2 units = 11,00 € (5,50 € / un)
+  // - Kit Inauguração (5+1 Grátis = 6 un): 25,00 € (Limite de 1 combo por cliente/pedido)
+  // - Progressive Tiers:
+  //   2 a 24 un: 5,50 € cada
+  //   25 a 49 un: 4,50 € cada (ex: 25 un = 112,50 €)
+  //   50 a 74 un: 4,00 € cada (ex: 50 un = 200,00 €)
+  //   75 a 99 un: 3,50 € cada (ex: 75 un = 262,50 €)
+  //   100+ un: 3,00 € cada (ex: 100 un = 300,00 €)
+  let subtotal = 11.00;
   let matchedKitName = `${count} Bótons Ímãs`;
+  let isPromoApplied = false;
+  let hasPromoExceeded = false;
 
-  if (count <= 2) {
-    subtotal = 12.00;
-    matchedKitName = 'Pedido Mínimo (2 Bótons)';
-  } else if (count === 3) {
-    subtotal = 18.00;
-    matchedKitName = '3 Bótons Ímãs';
-  } else if (count === 4) {
-    subtotal = 24.00;
-    matchedKitName = '4 Bótons Ímãs';
-  } else if (count === 5 || count === 6) {
-    subtotal = 25.00;
-    matchedKitName = 'Promoção de Inauguração (5 + 1 Grátis)';
+  const isPromoTarget = targetKit?.id === 'promo-inauguracao' || (count >= 5 && count <= 6);
+
+  if (isPromoTarget) {
+    if (count <= 6) {
+      subtotal = 25.00;
+      matchedKitName = 'Kit Inauguração (5 + 1 Grátis)';
+      isPromoApplied = true;
+    } else {
+      // 1 promo combo (6 units for 25€) + additional units at standard/progressive pricing
+      const extra = count - 6;
+      let extraPrice = 0;
+      if (extra < 25) {
+        extraPrice = extra * 5.50;
+      } else if (extra < 50) {
+        extraPrice = extra * 4.50;
+      } else if (extra < 75) {
+        extraPrice = extra * 4.00;
+      } else if (extra < 100) {
+        extraPrice = extra * 3.50;
+      } else {
+        extraPrice = extra * 3.00;
+      }
+      subtotal = 25.00 + extraPrice;
+      matchedKitName = `Kit Inauguração (6 un.) + ${extra} Adicionais`;
+      isPromoApplied = true;
+      hasPromoExceeded = true;
+    }
   } else {
-    subtotal = 25.00 + (count - 6) * 5.00;
-    matchedKitName = `${count} Bótons Ímãs (Promoção Aplicada)`;
+    // Normal / Progressive Tiers
+    if (count <= 2) {
+      subtotal = 11.00;
+      matchedKitName = 'Pedido Mínimo (2 Bótons)';
+    } else if (count < 25) {
+      subtotal = count * 5.50;
+      matchedKitName = `${count} Bótons Ímãs (5,50 €/un)`;
+    } else if (count < 50) {
+      subtotal = count * 4.50;
+      matchedKitName = `Kit Eventos (${count} un. • 4,50 €/un)`;
+    } else if (count < 75) {
+      subtotal = count * 4.00;
+      matchedKitName = `Kit Eventos (${count} un. • 4,00 €/un)`;
+    } else if (count < 100) {
+      subtotal = count * 3.50;
+      matchedKitName = `Kit Eventos (${count} un. • 3,50 €/un)`;
+    } else {
+      subtotal = count * 3.00;
+      matchedKitName = `Kit Eventos (${count} un. • 3,00 €/un)`;
+    }
   }
 
   const selectedShipping = shippingMethods.find((m) => m.id === selectedMethodId) || shippingMethods[0];
@@ -325,11 +364,22 @@ export default function CartCheckout({
                 <p className="text-xs text-atelier-500">
                   {count} bóton(s) ímã quadrado(s) com borda borrada 6,1cm e área segura 5,0cm.
                 </p>
-                {count >= 5 && count <= 6 && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg">
-                    <Gift className="w-3.5 h-3.5 text-rose-600" />
-                    Promoção de Inauguração: Paga 5 e leva 1 de BRINDE!
-                  </span>
+                {isPromoApplied && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
+                      <Gift className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      Promoção de Inauguração: Paga 5 e leva 1 de BRINDE (6 fotos por 25 €)!
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-900 bg-amber-50/90 px-2.5 py-1.5 rounded-lg border border-amber-200/80">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>Limite de 1 combo promocional por cliente/pedido.</span>
+                    </div>
+                  </div>
+                )}
+                {hasPromoExceeded && (
+                  <p className="text-[10.5px] text-amber-800 bg-amber-50/70 p-2 rounded-lg border border-amber-200/60 leading-relaxed">
+                    * Como a promoção é limitada a 1 combo por cliente/pedido, as primeiras 6 unidades foram calculadas no valor promocional de 25 €, e as unidades adicionais na tabela normal.
+                  </p>
                 )}
               </div>
 

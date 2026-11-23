@@ -208,12 +208,17 @@ export default function MockupStudio({
             <div>
               {currentCount < 2 ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-200">
-                  Adicione pelo menos 2 fotos (mínimo)
+                  Adicione pelo menos 2 fotos (mínimo - 11 €)
                 </span>
               ) : currentCount >= 5 && currentCount <= 6 ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 text-rose-800 text-xs font-bold border border-rose-200">
                   <Gift className="w-3.5 h-3.5 text-rose-600" />
                   Promoção 5 + 1 de Brinde Ativa! (25 €)
+                </span>
+              ) : currentCount >= 25 ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-900 text-xs font-bold border border-amber-200">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  Desconto de Eventos Ativo!
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
@@ -243,13 +248,19 @@ export default function MockupStudio({
               onClick={() => setItems((p) => p.slice(0, 2))}
               className="px-2.5 py-1 rounded-lg bg-atelier-100 hover:bg-atelier-200 text-atelier-700 cursor-pointer font-medium"
             >
-              2 Bótons (12 €)
+              2 Bótons (11 €)
             </button>
             <button
               onClick={() => {}}
               className="px-2.5 py-1 rounded-lg bg-brand/10 text-brand font-bold cursor-pointer"
             >
               5 + 1 Brinde (25 €)
+            </button>
+            <button
+              onClick={() => {}}
+              className="px-2.5 py-1 rounded-lg bg-amber-100/70 hover:bg-amber-100 text-amber-900 font-semibold cursor-pointer"
+            >
+              Kit Eventos 25 un. (112,50 €)
             </button>
           </div>
         </div>

@@ -67,6 +67,11 @@ export default function App() {
 
   // When user clicks a kit on the pricing cards
   const handleSelectKit = (kit) => {
+    if (kit.id === 'promo-inauguracao' && targetKit?.id === 'promo-inauguracao') {
+      alert('Aviso: A promoção Kit Inauguração (5 + 1 Grátis por 25 €) é limitada a 1 combo por cliente/pedido. Você já possui este combo promocional ativo!');
+      scrollToStudio();
+      return;
+    }
     setTargetKit(kit);
     scrollToStudio();
   };
