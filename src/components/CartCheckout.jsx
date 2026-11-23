@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { saveOrderCode, clearDraftPhotos } from '../utils/storage';
+import PaymentBadges from './PaymentBadges';
 
 export default function CartCheckout({
   isOpen,
@@ -493,6 +494,12 @@ export default function CartCheckout({
                     {grandTotal.toFixed(2).replace('.', ',')} €
                   </span>
                 </div>
+              </div>
+
+              {/* Accepted Payments Preview */}
+              <div className="bg-white rounded-xl p-3 border border-atelier-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+                <span className="font-semibold text-atelier-700">Formas de Pagamento Aceites:</span>
+                <PaymentBadges size="small" />
               </div>
 
               {/* Finish Button */}

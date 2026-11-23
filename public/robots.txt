@@ -1,4 +1,27 @@
 User-agent: *
 Allow: /
 
+# AI Crawlers & Search Engines (ChatGPT, Gemini, Claude, Perplexity, Copilot, Grok)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://kmpersonalisados.art/sitemap.xml
+# LLM Knowledge Standard: https://kmpersonalisados.art/llms.txt

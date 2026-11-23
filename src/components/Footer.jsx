@@ -1,6 +1,7 @@
 import React from 'react';
 import { Heart, ShieldCheck, Mail, FileText } from 'lucide-react';
 import { InstagramIcon, TikTokIcon, FacebookIcon } from './Icons';
+import PaymentBadges from './PaymentBadges';
 
 export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
   return (
@@ -144,6 +145,19 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
             </div>
           </div>
 
+        </div>
+
+        {/* Payment Methods & Shipping Bar */}
+        <div className="py-6 border-b border-atelier-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <span className="text-xs font-bold text-atelier-200 block">
+              Métodos de Pagamento Seguros
+            </span>
+            <span className="text-[11px] text-atelier-400">
+              Pagamentos aceites em Portugal e no Brasil após confirmação do pedido
+            </span>
+          </div>
+          <PaymentBadges />
         </div>
 
         {/* Bottom copyright (with discreet hidden admin shortcut on the © symbol) */}
