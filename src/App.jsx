@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import KitsPricing from './components/KitsPricing';
@@ -171,6 +172,18 @@ export default function App() {
 
       {/* Floating WhatsApp Action Button */}
       <FloatingWhatsApp settings={settings} />
+
+      {/* Floating Cart Button when there are customized items */}
+      {items.length > 0 && !isCartOpen && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-5 left-5 z-40 bg-brand hover:bg-brand-dark text-atelier-50 px-4 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-bold transition-all transform hover:scale-105 active:scale-95 border border-brand-light/20 cursor-pointer animate-fade-in"
+          title="Ver sacola de compras"
+        >
+          <ShoppingBag className="w-4 h-4 text-amber-300" />
+          <span>Ver Sacola ({items.length})</span>
+        </button>
+      )}
     </div>
   );
 }
