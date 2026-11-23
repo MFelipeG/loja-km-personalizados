@@ -10,7 +10,8 @@ import {
   Eye,
   CheckCircle2,
   Sparkles,
-  Scissors
+  Scissors,
+  Sun
 } from 'lucide-react';
 import {
   generateA4Sheet,
@@ -29,12 +30,14 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
   const [previewDataUrl, setPreviewDataUrl] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [showSafeGuide, setShowSafeGuide] = useState(false);
+  // Default brightness compensation: +15% (standard photo print compensation)
+  const [brightness, setBrightness] = useState(15);
 
   const chunks = chunkItemsForA4(order.items || []);
   const totalPages = chunks.length;
   const currentChunk = chunks[activePageIndex] || [];
 
-  // Generate canvas preview whenever active page or guide toggle changes
+  // Generate canvas preview whenever active page, brightness or guide toggle changes
   useEffect(() => {
     let isMounted = true;
     async function renderPreview() {
@@ -46,7 +49,9 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
           totalPages,
           {
             orderCode: order.code,
-            showSafeLines: showSafeGuide
+            customerName: order.customerName,
+            showSafeLines: showSafeGuide,
+            brightness: brightness
           }
         );
         if (isMounted) {
@@ -61,13 +66,16 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
 
     renderPreview();
     return () => { isMounted = false; };
-  }, [activePageIndex, showSafeGuide, order]);
+  }, [activePageIndex, showSafeGuide, brightness, order]);
 
   // Download high-resolution PNG (300 DPI) for current page
   const handleDownloadPNG = async () => {
     setDownloading(true);
     try {
-      await downloadSheetPNG(currentChunk, activePageIndex, totalPages, order.code);
+      await downloadSheetPNG(currentChunk, activePageIndex, totalPages, order.code, {
+        customerName: order.customerName,
+        brightness
+      });
     } catch (err) {
       alert('Erro ao gerar imagem PNG: ' + err.message);
     } finally {
@@ -79,7 +87,10 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
   const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
-      await downloadAllPagesPDF(order.items || [], order.code);
+      await downloadAllPagesPDF(order.items || [], order.code, {
+        customerName: order.customerName,
+        brightness
+      });
     } catch (err) {
       alert('Erro ao gerar PDF: ' + err.message);
     } finally {
@@ -98,7 +109,7 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
       <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto no-print">
         <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden flex flex-col max-h-[95vh]">
           
-          {/* Header */}
+          {/* Header com Nome da Pessoa e Número do Pedido */}
           <div className="px-6 py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-brand text-atelier-50 flex items-center justify-center shadow-xs">
@@ -106,13 +117,19 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
               </div>
               <div>
                 <h3 className="font-serif font-bold text-lg text-brand-dark flex items-center gap-2">
-                  <span>Gabarito A4 Automático (Substituto do Canva)</span>
+                  <span>{order.customerName ? `${order.customerName} • Pedido ${order.code}` : `Pedido ${order.code}`}</span>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-sans font-bold">
                     300 DPI
                   </span>
+                  {brightness > 0 && (
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-sans font-bold flex items-center gap-1">
+                      <Sun className="w-3 h-3 text-amber-600" />
+                      <span>Brilho +{brightness}%</span>
+                    </span>
+                  )}
                 </h3>
                 <p className="text-xs text-atelier-500">
-                  Pedido {order.code} • {order.items?.length || 0} unidades • 12 fotos por folha A4 (61x61mm)
+                  Cliente: <strong className="text-brand-dark">{order.customerName || 'Não especificado'}</strong> • Pedido <strong>{order.code}</strong> • {order.items?.length || 0} fotos (61x61mm) • Gabarito A4 300 DPI
                 </p>
               </div>
             </div>
@@ -120,9 +137,62 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
             <button
               onClick={onClose}
               className="p-2 text-atelier-400 hover:text-atelier-700 hover:bg-atelier-200/60 rounded-full transition-colors cursor-pointer"
+              title="Fechar"
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          {/* Barra de Brilho de Impressão (Compensação Anti-Escurecimento) */}
+          <div className="px-6 py-2.5 bg-amber-50/80 border-b border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                <Sun className="w-4 h-4 text-amber-600" />
+                <span>Brilho de Impressão:</span>
+              </div>
+              
+              {/* Presets de Brilho */}
+              <div className="inline-flex rounded-xl p-1 bg-white border border-amber-200 shadow-2xs gap-1">
+                {[
+                  { label: '0% (Original)', val: 0 },
+                  { label: '+10%', val: 10 },
+                  { label: '+15% (Recomendado)', val: 15 },
+                  { label: '+20%', val: 20 },
+                  { label: '+30% (Mais Claro)', val: 30 }
+                ].map((preset) => (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => setBrightness(preset.val)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      brightness === preset.val
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'text-atelier-700 hover:bg-amber-100/60'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Slider de Ajuste Fino */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-amber-800 font-medium">Ajuste fino:</span>
+              <input
+                type="range"
+                min="0"
+                max="40"
+                step="1"
+                value={brightness}
+                onChange={(e) => setBrightness(Number(e.target.value))}
+                className="w-24 sm:w-28 accent-amber-600 cursor-pointer"
+                title="Ajuste o brilho de 0% até +40%"
+              />
+              <span className="font-mono font-bold text-amber-900 min-w-8">
+                +{brightness}%
+              </span>
+            </div>
           </div>
 
           {/* Action Toolbar */}
@@ -243,6 +313,8 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
               pageIndex={pageIdx}
               totalPages={chunks.length}
               orderCode={order.code}
+              customerName={order.customerName}
+              brightness={brightness}
             />
           </div>
         ))}
@@ -252,16 +324,20 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
 }
 
 // Subcomponent to asynchronously paint A4 canvas for @media print
-function PrintPageRenderer({ chunk, pageIndex, totalPages, orderCode }) {
+function PrintPageRenderer({ chunk, pageIndex, totalPages, orderCode, customerName, brightness }) {
   const [dataUrl, setDataUrl] = useState('');
 
   useEffect(() => {
     async function draw() {
-      const canvas = await generateA4Sheet(chunk, pageIndex, totalPages, { orderCode });
+      const canvas = await generateA4Sheet(chunk, pageIndex, totalPages, {
+        orderCode,
+        customerName,
+        brightness
+      });
       setDataUrl(canvas.toDataURL('image/jpeg', 0.98));
     }
     draw();
-  }, [chunk, pageIndex, totalPages, orderCode]);
+  }, [chunk, pageIndex, totalPages, orderCode, customerName, brightness]);
 
   if (!dataUrl) return null;
   return (

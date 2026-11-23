@@ -48,10 +48,14 @@ export async function renderMagnetBlock(item, options = {}) {
     const panX = item.panX || 0;
     const panY = item.panY || 0;
     const blurAmount = (item.blur || 8) * 2.5; // Scale blur for 300 DPI
+    
+    // Print Brightness Compensation (10% to 30% boost to prevent dark prints)
+    const brightnessVal = options.brightness !== undefined ? options.brightness : 15;
+    const brightnessMultiplier = Math.max(0.5, 1 + (brightnessVal / 100));
 
     // --- CAMADA 1: Fundo Borrado Total (61mm x 61mm / 720x720px) ---
     ctx.save();
-    ctx.filter = `blur(${blurAmount}px)`;
+    ctx.filter = `blur(${blurAmount}px) brightness(${brightnessMultiplier})`;
     // Draw slightly scaled up to avoid edge fade from blur filter
     const bleedFactor = 1.08;
     const bW = BLOCK_SIZE_PX * bleedFactor;
@@ -64,9 +68,10 @@ export async function renderMagnetBlock(item, options = {}) {
     ctx.save();
     // Clip to safe area
     ctx.beginPath();
-    // Subtle rounded corners for visualization or exact square
     ctx.rect(SAFE_OFFSET_PX, SAFE_OFFSET_PX, SAFE_SIZE_PX, SAFE_SIZE_PX);
     ctx.clip();
+
+    ctx.filter = `brightness(${brightnessMultiplier})`;
 
     // Compute aspect-ratio fill for safe area with user zoom & pan
     const imgAspect = img.width / img.height;
@@ -191,18 +196,22 @@ export async function generateA4Sheet(itemsChunk, pageIndex = 0, totalPages = 1,
   }
 
   // 4. Header & Footer metadata on sheet (outside print grid)
-  ctx.fillStyle = '#666666';
-  ctx.font = '26px sans-serif';
+  ctx.fillStyle = '#333333';
+  ctx.font = 'bold 26px sans-serif';
   ctx.textAlign = 'left';
+  const customerLabel = options.customerName ? `Cliente: ${options.customerName} | ` : '';
+  const brightnessLabel = options.brightness ? ` | Brilho: +${options.brightness}%` : '';
   ctx.fillText(
-    `KM Personalizados | Bótons Ímãs 61x61mm (Área Útil 50x50mm) | Pedido: ${options.orderCode || 'N/A'}`,
+    `KM Personalizados | ${customerLabel}Pedido: ${options.orderCode || 'N/A'}${brightnessLabel}`,
     MARGIN_X_PX,
     MARGIN_Y_PX - 50
   );
 
+  ctx.font = '24px sans-serif';
+  ctx.fillStyle = '#666666';
   ctx.textAlign = 'right';
   ctx.fillText(
-    `Página ${pageIndex + 1} de ${totalPages} | 300 DPI Real | 12 Unidades/Folha`,
+    `Página ${pageIndex + 1} de ${totalPages} | 300 DPI Real | 61x61mm`,
     MARGIN_X_PX + GRID_WIDTH_PX,
     MARGIN_Y_PX - 50
   );
@@ -226,11 +235,12 @@ export function chunkItemsForA4(items) {
 /**
  * Download single page as 300 DPI PNG
  */
-export async function downloadSheetPNG(itemsChunk, pageIndex, totalPages, orderCode) {
-  const canvas = await generateA4Sheet(itemsChunk, pageIndex, totalPages, { orderCode });
+export async function downloadSheetPNG(itemsChunk, pageIndex, totalPages, orderCode, options = {}) {
+  const canvas = await generateA4Sheet(itemsChunk, pageIndex, totalPages, { orderCode, ...options });
   const dataUrl = canvas.toDataURL('image/png', 1.0);
   const link = document.createElement('a');
-  link.download = `Gabarito-A4-${orderCode || 'KM'}-Pagina-${pageIndex + 1}.png`;
+  const safeName = (options.customerName || 'KM').replace(/[^a-zA-Z0-9_-]/g, '_');
+  link.download = `Gabarito-A4-${safeName}-${orderCode || 'KM'}-Pagina-${pageIndex + 1}.png`;
   link.href = dataUrl;
   link.click();
 }
@@ -238,7 +248,7 @@ export async function downloadSheetPNG(itemsChunk, pageIndex, totalPages, orderC
 /**
  * Download all pages as high-resolution PDF
  */
-export async function downloadAllPagesPDF(items, orderCode) {
+export async function downloadAllPagesPDF(items, orderCode, options = {}) {
   const chunks = chunkItemsForA4(items);
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -250,11 +260,12 @@ export async function downloadAllPagesPDF(items, orderCode) {
   for (let i = 0; i < chunks.length; i++) {
     if (i > 0) pdf.addPage('a4', 'portrait');
 
-    const canvas = await generateA4Sheet(chunks[i], i, chunks.length, { orderCode });
+    const canvas = await generateA4Sheet(chunks[i], i, chunks.length, { orderCode, ...options });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     // A4 dimensions: 210 x 297 mm
     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
   }
 
-  pdf.save(`Gabarito-A4-${orderCode || 'KM-Personalizados'}.pdf`);
+  const safeName = (options.customerName || 'KM').replace(/[^a-zA-Z0-9_-]/g, '_');
+  pdf.save(`Gabarito-A4-${safeName}-${orderCode || 'KM-Personalizados'}.pdf`);
 }
