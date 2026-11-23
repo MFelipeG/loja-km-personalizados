@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Heart, Camera } from 'lucide-react';
 
 export default function Hero({ onScrollToStudio, settings }) {
-  // State for interactive mouse tilt on the hero fridge magnets
+  // State for interactive mouse/touch tilt on the hero fridge magnets
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -14,6 +15,46 @@ export default function Hero({ onScrollToStudio, settings }) {
 
   const handleMouseLeave = () => {
     setTilt({ x: 0, y: 0 });
+  };
+
+  const handleTouchStart = (e) => {
+    isDraggingRef.current = false;
+    handleTouchMove(e);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    isDraggingRef.current = true;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width - 0.5) * 18;
+    const y = ((touch.clientY - rect.top) / rect.height - 0.5) * -18;
+    setTilt({ x, y });
+  };
+
+  const handleTouchEnd = () => {
+    setTimeout(() => {
+      setTilt({ x: 0, y: 0 });
+    }, 1200);
+  };
+
+  const handleSimulatorClick = (e) => {
+    if (e) e.stopPropagation();
+    // Interactive 3D tilt wave demonstration
+    setTilt({ x: 14, y: -9 });
+    setTimeout(() => setTilt({ x: -14, y: 9 }), 180);
+    setTimeout(() => setTilt({ x: 7, y: -4 }), 360);
+    setTimeout(() => {
+      setTilt({ x: 0, y: 0 });
+      if (onScrollToStudio) {
+        onScrollToStudio();
+      }
+    }, 550);
+  };
+
+  const handleCardClick = () => {
+    if (isDraggingRef.current) return;
+    handleSimulatorClick();
   };
 
   return (
@@ -89,18 +130,29 @@ export default function Hero({ onScrollToStudio, settings }) {
           {/* Right Column: Visual Fridge / Magnetic Showcase with REAL PHOTO MAGNETS */}
           <div className="lg:col-span-5 flex justify-center">
             <div
-              className="relative w-full max-w-[420px] aspect-[4/5] rounded-3xl bg-gradient-to-b from-[#FAF8F5] via-[#EFEBE4] to-[#E2DAD0] p-6 shadow-fridge border-4 border-white/90 flex flex-col justify-between overflow-hidden perspective-container cursor-pointer select-none"
+              className="relative w-full max-w-[420px] aspect-[4/5] rounded-3xl bg-gradient-to-b from-[#FAF8F5] via-[#EFEBE4] to-[#E2DAD0] p-6 shadow-fridge border-4 border-white/90 flex flex-col justify-between overflow-hidden perspective-container cursor-pointer select-none group"
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
-              title="Passe o rato ou toque para inclinar o simulador realista em 3D!"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onClick={handleCardClick}
+              title="Incline o frigorífico ou toque no botão para abrir o simulador 3D!"
             >
               {/* Fridge texture lines & ambient shadow */}
               <div className="absolute inset-0 bg-[radial-gradient(#C5B6A8_1px,transparent_1px)] [background-size:16px_16px] opacity-25 pointer-events-none" />
               
-              <div className="absolute top-3.5 right-4 px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[11px] font-semibold text-atelier-800 shadow-xs flex items-center gap-1.5 z-20">
+              {/* Interactive Simulator Button */}
+              <button
+                type="button"
+                onClick={handleSimulatorClick}
+                className="absolute top-3.5 right-4 px-3.5 py-1.5 rounded-full bg-white/90 hover:bg-white text-atelier-800 hover:text-brand-dark shadow-xs hover:shadow-md border border-atelier-200/80 text-[11px] font-bold flex items-center gap-1.5 z-20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+                title="Toque para testar o simulador 3D com as suas próprias fotos!"
+              >
                 <Camera className="w-3.5 h-3.5 text-brand" />
                 <span>Simulador de Frigorífico 3D</span>
-              </div>
+                <ArrowRight className="w-3 h-3 text-brand transition-transform group-hover:translate-x-0.5" />
+              </button>
 
               {/* 4 REALISTIC SAMPLE MAGNETS */}
               <div
