@@ -52,11 +52,14 @@ export default function Header({
           <a href="#depoimentos" className="hover:text-brand transition-colors">
             Depoimentos
           </a>
+          <a href="#faq" className="hover:text-brand transition-colors">
+            FAQ
+          </a>
           <button
             onClick={onOpenTerms}
             className="hover:text-brand transition-colors text-atelier-600 cursor-pointer"
           >
-            Termos & Reembolso
+            Termos & Políticas
           </button>
         </nav>
 

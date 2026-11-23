@@ -110,6 +110,11 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                 </a>
               </li>
               <li>
+                <a href="#faq" className="hover:text-brand-light transition-colors font-medium text-brand-light">
+                  Perguntas Frequentes (FAQ)
+                </a>
+              </li>
+              <li>
                 <button
                   onClick={onOpenTerms}
                   className="hover:text-brand-light transition-colors text-left cursor-pointer"
@@ -123,23 +128,54 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
           {/* Privacy & Legal Badges */}
           <div className="space-y-3 text-xs">
             <h4 className="font-serif font-bold text-sm text-atelier-50">
-              Privacidade & Garantia
+              Políticas & Segurança
             </h4>
             <div className="space-y-2 text-atelier-400">
               <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Fotos Apagadas Após Entrega</span>
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>RGPD: Fotos Apagadas Após Entrega</span>
               </div>
               <p className="text-[11px] leading-relaxed text-atelier-400">
-                Não retemos as suas imagens. Após a expedição e receção da encomenda, as fotos são permanentemente apagadas dos nossos ficheiros.
+                Não retemos as suas fotos. Concluída a expedição e entrega pelos CTT, as imagens são permanentemente eliminadas dos nossos servidores.
               </p>
-              <div className="pt-1">
+
+              <ul className="space-y-1.5 pt-1 text-[11px]">
+                <li>
+                  <button
+                    onClick={onOpenTerms}
+                    className="text-atelier-300 hover:text-brand-light transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                    <span>Desistência: Retenção 50% de material</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={onOpenTerms}
+                    className="text-atelier-300 hover:text-brand-light transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <span>Garantia: Reenvio Gratuito CTT</span>
+                  </button>
+                </li>
+                <li>
+                  <a
+                    href="#faq"
+                    className="text-atelier-300 hover:text-brand-light transition-colors flex items-center gap-1.5 cursor-pointer text-left"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-light"></span>
+                    <span>Perguntas Frequentes (Dúvidas Rápidas)</span>
+                  </a>
+                </li>
+              </ul>
+
+              <div className="pt-1.5">
                 <button
                   onClick={onOpenTerms}
                   className="text-brand-light hover:underline font-semibold flex items-center gap-1 text-[11px] cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Ver Política de Reembolso Completa</span>
+                  <span>Ver Todas as Políticas & Termos</span>
                 </button>
               </div>
             </div>

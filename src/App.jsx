@@ -6,11 +6,13 @@ import MockupStudio from './components/MockupStudio';
 import DeadlinesShipping from './components/DeadlinesShipping';
 import UpcomingProducts from './components/UpcomingProducts';
 import ReviewsSection from './components/ReviewsSection';
+import FAQSection from './components/FAQSection';
 import Footer from './components/Footer';
 import CartCheckout from './components/CartCheckout';
 import OrderTrackingModal from './components/OrderTrackingModal';
 import AdminPanel from './components/AdminPanel';
 import TermsModal from './components/TermsModal';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 
 export default function App() {
   const [settings, setSettings] = useState(null);
@@ -109,6 +111,12 @@ export default function App() {
         {/* Social Proof & Customer Reviews */}
         <ReviewsSection />
 
+        {/* Perguntas Frequentes (FAQ) & Políticas da Loja */}
+        <FAQSection
+          settings={settings}
+          onOpenTerms={() => setIsTermsOpen(true)}
+        />
+
         {/* Upcoming Products ("Em Breve na Loja") */}
         <UpcomingProducts
           products={settings?.upcomingProducts}
@@ -160,6 +168,9 @@ export default function App() {
           }
         }}
       />
+
+      {/* Floating WhatsApp Action Button */}
+      <FloatingWhatsApp settings={settings} />
     </div>
   );
 }
