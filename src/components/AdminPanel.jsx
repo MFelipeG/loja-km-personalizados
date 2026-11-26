@@ -21,7 +21,8 @@ import {
   Key,
   ShieldCheck,
   Mail,
-  Phone
+  Phone,
+  BarChart2
 } from 'lucide-react';
 import A4PrintModal from './A4PrintModal';
 
@@ -59,6 +60,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
     shippingInfoText: '',
     careInstructions: '',
     googleSheetsCsvUrl: '',
+    googleAnalyticsId: 'GTM-NLJPFJV8',
     kits: [],
     shippingMethods: [],
     newUsername: '',
@@ -124,6 +126,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
           shippingInfoText: data.shippingInfoText || '',
           careInstructions: data.careInstructions || '',
           googleSheetsCsvUrl: data.googleSheetsCsvUrl || '',
+          googleAnalyticsId: data.googleAnalyticsId || 'GTM-NLJPFJV8',
           kits: data.kits || [],
           shippingMethods: data.shippingMethods || [],
           newUsername: '',
@@ -296,30 +299,30 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
   });
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto no-print">
-      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-4 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-1 sm:p-4 overflow-y-auto no-print">
+      <div className="relative w-full max-w-5xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-auto max-h-[96vh] sm:max-h-[92vh] flex flex-col">
         
-        {/* Header */}
-        <div className="px-6 py-4 bg-brand-dark text-atelier-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand/50 border border-brand-light/30 flex items-center justify-center text-atelier-50">
-              <Lock className="w-5 h-5" />
+        {/* Header - Responsivo para Mobile */}
+        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-brand-dark text-atelier-50 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-brand/50 border border-brand-light/30 flex items-center justify-center text-atelier-50 shrink-0">
+              <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="font-serif font-bold text-lg leading-tight">
-                Painel da Equipa • KM Personalizados
+            <div className="min-w-0">
+              <h3 className="font-serif font-bold text-sm sm:text-lg leading-tight truncate">
+                Painel da Equipa • KM
               </h3>
-              <p className="text-xs text-atelier-300">
-                Portugal • Encomendas, Impressão A4 300 DPI, CTT & Segurança
+              <p className="text-[10px] sm:text-xs text-atelier-300 truncate">
+                Encomendas, Gabarito A4 300 DPI, CTT & Google
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {token && (
               <button
                 onClick={handleLogout}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Sair do painel"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -329,6 +332,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             <button
               onClick={onClose}
               className="p-1.5 text-atelier-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+              title="Fechar painel"
             >
               <X className="w-5 h-5" />
             </button>
@@ -337,13 +341,13 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
         {/* ================= LOGIN FORM (IF NOT AUTHENTICATED) ================= */}
         {!token ? (
-          <div className="p-8 sm:p-12 max-w-md mx-auto w-full my-auto text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-brand-cream border border-brand-light/40 flex items-center justify-center mx-auto text-brand">
-              <Lock className="w-8 h-8" />
+          <div className="p-6 sm:p-12 max-w-md mx-auto w-full my-auto text-center space-y-5 overflow-y-auto">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-cream border border-brand-light/40 flex items-center justify-center mx-auto text-brand shadow-xs">
+              <Lock className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
             <div>
-              <h4 className="font-serif text-2xl font-bold text-brand-dark">
+              <h4 className="font-serif text-xl sm:text-2xl font-bold text-brand-dark">
                 Acesso à Gestão do Ateliê
               </h4>
               <p className="text-xs text-atelier-500 mt-1">
@@ -352,12 +356,12 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
             </div>
 
             {loginError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
                 {loginError}
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4 text-left">
+            <form onSubmit={handleLogin} className="space-y-3.5 text-left">
               <div>
                 <label className="block text-xs font-semibold text-atelier-700 mb-1">
                   Utilizador
@@ -399,51 +403,51 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
           /* ================= AUTHENTICATED ADMIN DASHBOARD ================= */
           <div className="flex-1 flex flex-col overflow-hidden">
             
-            {/* Admin Tabs Bar */}
-            <div className="px-6 py-2.5 bg-atelier-50 border-b border-atelier-200 flex items-center gap-4 text-xs font-bold text-atelier-600">
+            {/* Admin Tabs Bar - Scroll Horizontal Touch no Mobile */}
+            <div className="px-2 sm:px-6 py-2 bg-atelier-50 border-b border-atelier-200 flex items-center gap-1.5 sm:gap-3 text-xs font-bold text-atelier-600 overflow-x-auto scrollbar-none shrink-0">
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`py-2 px-3 rounded-xl flex items-center gap-2 transition-colors cursor-pointer ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shrink-0 ${
                   activeTab === 'orders'
                     ? 'bg-brand text-atelier-50 shadow-xs'
                     : 'hover:bg-atelier-100 text-atelier-700'
                 }`}
               >
-                <Package className="w-4 h-4" />
-                <span>Gestão de Encomendas ({orders.length})</span>
+                <Package className="w-4 h-4 shrink-0" />
+                <span>Encomendas ({orders.length})</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`py-2 px-3 rounded-xl flex items-center gap-2 transition-colors cursor-pointer ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shrink-0 ${
                   activeTab === 'reviews'
                     ? 'bg-brand text-atelier-50 shadow-xs'
                     : 'hover:bg-atelier-100 text-atelier-700'
                 }`}
               >
-                <MessageSquare className="w-4 h-4" />
-                <span>Moderação de Depoimentos ({reviews.length})</span>
+                <MessageSquare className="w-4 h-4 shrink-0" />
+                <span>Depoimentos ({reviews.length})</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`py-2 px-3 rounded-xl flex items-center gap-2 transition-colors cursor-pointer ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shrink-0 ${
                   activeTab === 'settings'
                     ? 'bg-brand text-atelier-50 shadow-xs'
                     : 'hover:bg-atelier-100 text-atelier-700'
                 }`}
               >
-                <Settings className="w-4 h-4" />
-                <span>Configurações, Senha & Planilha</span>
+                <Settings className="w-4 h-4 shrink-0" />
+                <span>Configurações & SEO</span>
               </button>
             </div>
 
             {/* Tab 1: Orders Management & Easy 1-Click Print */}
             {activeTab === 'orders' && (
-              <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="p-3 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4 flex-1">
                 
                 {/* Search & Refresh */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                   <div className="relative w-full sm:w-72">
                     <Search className="w-4 h-4 text-atelier-400 absolute left-3 top-2.5" />
                     <input
@@ -457,7 +461,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
                   <button
                     onClick={() => fetchOrders()}
-                    className="px-3 py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                    className="px-3 py-2 text-xs font-semibold text-atelier-700 bg-atelier-100 hover:bg-atelier-200 rounded-xl flex items-center justify-center gap-1.5 transition-colors shrink-0 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-brand" />
                     <span>Atualizar Encomendas</span>
@@ -473,33 +477,36 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     <p className="text-sm font-semibold">Nenhuma encomenda registada ainda</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {filteredOrders.map((ord) => (
                       <div
                         key={ord.id || ord.code}
-                        className="p-4 sm:p-5 bg-white rounded-2xl border border-atelier-200 shadow-xs space-y-4 hover:border-brand/30 transition-all"
+                        className="p-3.5 sm:p-5 bg-white rounded-2xl border border-atelier-200 shadow-xs space-y-3 sm:space-y-4 hover:border-brand/30 transition-all"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-atelier-100">
-                          <div>
-                            <span className="font-mono text-base font-extrabold text-brand mr-3">
+                        {/* Top: Code, Customer Name & Status */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-atelier-100">
+                          <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+                            <span className="font-mono text-base font-extrabold text-brand">
                               {ord.code}
                             </span>
                             <span className="font-serif font-bold text-sm text-brand-dark">
                               {ord.customerName}
                             </span>
-                            <span className="text-xs text-atelier-500 ml-2">
-                              ({ord.customerPhone})
-                            </span>
+                            {ord.customerPhone && (
+                              <span className="text-xs text-atelier-500">
+                                ({ord.customerPhone})
+                              </span>
+                            )}
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-brand-dark">
+                          <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto pt-1 sm:pt-0">
+                            <span className="text-xs font-bold text-brand-dark whitespace-nowrap">
                               Total: {ord.total?.toFixed(2).replace('.', ',')} €
                             </span>
                             <select
                               value={ord.status}
                               onChange={(e) => handleStatusChange(ord.code, e.target.value)}
-                              className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-atelier-300 bg-atelier-50 text-atelier-800 focus:outline-none focus:border-brand"
+                              className="text-xs font-semibold px-2 py-1 rounded-lg border border-atelier-300 bg-atelier-50 text-atelier-800 focus:outline-none focus:border-brand cursor-pointer"
                             >
                               <option value="Pendente">Pendente</option>
                               <option value="Em Produção">Em Produção</option>
@@ -511,13 +518,13 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                           </div>
                         </div>
 
-                        {/* Order Details & Items Preview */}
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        {/* Order Details & Actions */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                           <div className="text-xs text-atelier-600 space-y-1">
                             <p>
                               <strong>Itens:</strong> {ord.quantity} unidades • {ord.kitName}
                             </p>
-                            <p>
+                            <p className="break-words">
                               <strong>Morada:</strong> {ord.address ? `${ord.address.street}, ${ord.address.number || 'S/N'}${ord.address.complement ? ` (${ord.address.complement})` : ''} - ${ord.address.postalCode || ''} ${ord.address.concelho || ''}` : 'A combinar'}
                             </p>
                             <p>
@@ -529,21 +536,19 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                           </div>
 
                           {/* Quick Actions: Direct Print & Delete */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            {/* Canva-killing Print Engine Button */}
+                          <div className="flex items-center gap-2 pt-2 sm:pt-0 shrink-0">
                             <button
                               onClick={() => setSelectedOrderForPrint(ord)}
-                              className="px-4 py-2 bg-brand hover:bg-brand-dark text-atelier-50 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                              title="Visualizar, baixar ou imprimir gabarito A4 em 300 DPI sem Canva"
+                              className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-brand hover:bg-brand-dark text-atelier-50 text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                              title="Visualizar, baixar ou imprimir gabarito A4 em 300 DPI com controle de brilho"
                             >
-                              <Printer className="w-4 h-4" />
+                              <Printer className="w-4 h-4 shrink-0" />
                               <span>Imprimir Folha A4 (300 DPI)</span>
                             </button>
 
-                            {/* Delete Order Button */}
                             <button
                               onClick={() => handleDeleteOrder(ord.code)}
-                              className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                               title="Eliminar encomenda"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -580,10 +585,10 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
 
             {/* Tab 2: Reviews Moderation */}
             {activeTab === 'reviews' && (
-              <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="p-3 sm:p-6 overflow-y-auto space-y-4 flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-serif font-bold text-base text-brand-dark">
-                    Moderação de Depoimentos de Clientes
+                  <h4 className="font-serif font-bold text-sm sm:text-base text-brand-dark">
+                    Moderação de Depoimentos
                   </h4>
                   <button
                     onClick={() => fetchReviews()}
@@ -603,10 +608,10 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     {reviews.map((rev) => (
                       <div
                         key={rev.id}
-                        className="p-4 bg-white rounded-2xl border border-atelier-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                        className="p-3.5 sm:p-4 bg-white rounded-2xl border border-atelier-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                       >
                         <div className="space-y-1 text-xs">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-brand-dark">{rev.name}</span>
                             <span className="text-amber-500 font-bold">★ {rev.rating}/5</span>
                             <span
@@ -632,7 +637,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
                           {rev.status !== 'approved' && (
                             <button
                               onClick={() => handleReviewStatus(rev.id, 'approved')}
@@ -665,9 +670,9 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
               </div>
             )}
 
-            {/* Tab 3: Store Settings, Security, Password & Google Sheets */}
+            {/* Tab 3: Store Settings, Security, Password & Google Analytics */}
             {activeTab === 'settings' && (
-              <form onSubmit={handleSaveSettings} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              <form onSubmit={handleSaveSettings} className="p-3 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1 text-xs">
                 
                 {settingsSavedMessage && (
                   <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl font-bold flex items-center gap-2">
@@ -688,7 +693,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     Aqui pode alterar os seus dados para que <strong>somente você</strong> tenha acesso ao painel de administração:
                   </p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block font-bold text-atelier-700 mb-1">
                         Novo Nome de Utilizador (Atual: {currentAdminUser})
@@ -717,13 +722,33 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                   </div>
                 </div>
 
+                {/* Google Analytics & Tag Manager (Rastreio) */}
+                <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/80 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-amber-700" />
+                    <label className="block font-bold text-brand-dark text-xs sm:text-sm">
+                      Google Analytics / Tag Manager (ID)
+                    </label>
+                  </div>
+                  <p className="text-atelier-600 text-[11px] leading-relaxed">
+                    Código de acompanhamento oficial para monitorizar visitas e clientes (ex: <code>GTM-NLJPFJV8</code> ou <code>G-XXXXXXXXXX</code>):
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="GTM-NLJPFJV8"
+                    value={settingsForm.googleAnalyticsId}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, googleAnalyticsId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:border-brand font-mono font-bold text-xs"
+                  />
+                </div>
+
                 {/* Google Sheets CSV Link for CTT Shipping */}
                 <div className="bg-atelier-50 rounded-2xl p-4 border border-atelier-200 space-y-2">
-                  <label className="block font-bold text-brand-dark text-sm">
+                  <label className="block font-bold text-brand-dark text-xs sm:text-sm">
                     Link CSV da Planilha de Custos & Fretes (Google Sheets)
                   </label>
                   <p className="text-atelier-500 text-[11px]">
-                    Planilha oficial conectada com valores de fretes CTT e custos:
+                    Planilha conectada com valores de fretes CTT e custos:
                   </p>
                   <input
                     type="url"
@@ -735,7 +760,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 </div>
 
                 {/* WhatsApp & Email & Production Days */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block font-bold text-atelier-700 mb-1">
                       WhatsApp Oficial (+351...)
@@ -771,7 +796,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                       min="1"
                       max="30"
                       value={settingsForm.productionDays}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, productionDays: parseInt(e.target.value, 10) })}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, productionDays: parseInt(e.target.value, 10) || 2 })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand"
                     />
                   </div>
@@ -823,14 +848,16 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 </div>
 
                 {/* Save Button */}
-                <button
-                  type="submit"
-                  disabled={savingSettings}
-                  className="px-6 py-3 bg-brand hover:bg-brand-dark text-atelier-50 font-bold rounded-xl shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{savingSettings ? 'A guardar...' : 'Guardar Todas as Alterações'}</span>
-                </button>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="w-full sm:w-auto px-6 py-3 bg-brand hover:bg-brand-dark text-atelier-50 font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{savingSettings ? 'A guardar...' : 'Guardar Todas as Alterações'}</span>
+                  </button>
+                </div>
 
               </form>
             )}

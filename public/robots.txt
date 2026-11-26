@@ -1,7 +1,14 @@
 User-agent: *
 Allow: /
 
-# AI Crawlers & Search Engines (ChatGPT, Gemini, Claude, Perplexity, Copilot, Grok)
+# Google Search Engine & Google Images
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+# AI Crawlers & Search Grounding (Gemini, ChatGPT, Claude, Perplexity, Copilot, Grok)
 User-agent: GPTBot
 Allow: /
 

@@ -14,6 +14,7 @@
     "shippingInfoText": "Enviamos para todo o país através dos CTT (Correio Verde ou Registado com rastreio) ou Cacifos InPost. Embalagem almofadada anti-impacto para garantir que os seus ímãs cheguem impecáveis!",
     "careInstructions": "Limpe apenas com pano seco ou levemente umedecido em água. Não use álcool nem produtos abrasivos. Evite exposição prolongada ao sol intenso.",
     "googleSheetsCsvUrl": "https://docs.google.com/spreadsheets/d/1e4iCyvMsLaz2zGzrW0mqcosvbHDLmhwdpnbuXzeoSxo/export?format=csv",
+    "googleAnalyticsId": "GTM-NLJPFJV8",
     "kits": [
       {
         "id": "minimo-2",

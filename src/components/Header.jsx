@@ -32,13 +32,13 @@ export default function Header({
         {/* Right actions: Redes Sociais e Botão de Procurar Encomenda */}
         <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
           
-          {/* Redes Sociais */}
+          {/* Redes Sociais com rel="me" para verificação Google & SEO */}
           <div className="flex items-center gap-0.5 sm:gap-1.5">
             {settings?.instagram && (
               <a
                 href={settings.instagram}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="me noopener noreferrer"
                 title="Instagram Oficial KM Personalizados"
                 className="p-1.5 sm:p-2 text-atelier-600 hover:text-brand hover:bg-atelier-100 rounded-full transition-colors"
               >
@@ -50,7 +50,7 @@ export default function Header({
               <a
                 href={settings.tiktok}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="me noopener noreferrer"
                 title="TikTok Oficial KM Personalizados"
                 className="p-1.5 sm:p-2 text-atelier-600 hover:text-brand hover:bg-atelier-100 rounded-full transition-colors"
               >
@@ -62,7 +62,7 @@ export default function Header({
               <a
                 href={settings.facebook}
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="me noopener noreferrer"
                 title="Facebook Oficial KM Personalizados"
                 className="p-1.5 sm:p-2 text-atelier-600 hover:text-brand hover:bg-atelier-100 rounded-full transition-colors"
               >

@@ -43,13 +43,13 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
               </div>
             </div>
 
-            {/* Social channels */}
+            {/* Social channels com rel="me" para indexação Google */}
             <div className="flex items-center gap-3 pt-2">
               {settings?.instagram && (
                 <a
                   href={settings.instagram}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="me noopener noreferrer"
                   className="w-9 h-9 rounded-full bg-atelier-800 hover:bg-brand text-atelier-300 hover:text-white flex items-center justify-center transition-colors shadow-xs"
                   title="Siga a KM Personalizados no Instagram"
                 >
@@ -61,7 +61,7 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                 <a
                   href={settings.tiktok}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="me noopener noreferrer"
                   className="w-9 h-9 rounded-full bg-atelier-800 hover:bg-brand text-atelier-300 hover:text-white flex items-center justify-center transition-colors shadow-xs"
                   title="Siga a KM Personalizados no TikTok"
                 >
@@ -73,7 +73,7 @@ export default function Footer({ settings, onOpenAdmin, onOpenTerms }) {
                 <a
                   href={settings.facebook}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="me noopener noreferrer"
                   className="w-9 h-9 rounded-full bg-atelier-800 hover:bg-brand text-atelier-300 hover:text-white flex items-center justify-center transition-colors shadow-xs"
                   title="Siga a KM Personalizados no Facebook"
                 >

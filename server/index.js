@@ -166,11 +166,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https:", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "https://images.unsplash.com", "https://kmpersonalisados.art"],
-      connectSrc: ["'self'", "https://kmpersonalisados.art", "https://docs.google.com", "https://sheets.googleapis.com", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "https://images.unsplash.com", "https://kmpersonalisados.art", "https://*.google-analytics.com", "https://*.googletagmanager.com"],
+      connectSrc: ["'self'", "https://kmpersonalisados.art", "https://docs.google.com", "https://sheets.googleapis.com", "https://*.google-analytics.com", "https://*.analytics.google.com", "https://*.googletagmanager.com", "data:", "blob:"],
+      frameSrc: ["'self'", "https://www.googletagmanager.com"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'none'"]
@@ -266,6 +267,7 @@ app.get('/api/settings', (req, res) => {
     shippingInfoText: db.settings.shippingInfoText,
     careInstructions: db.settings.careInstructions,
     googleSheetsCsvUrl: db.settings.googleSheetsCsvUrl,
+    googleAnalyticsId: db.settings.googleAnalyticsId || 'GTM-NLJPFJV8',
     kits: db.settings.kits,
     shippingMethods: db.settings.shippingMethods,
     upcomingProducts: db.settings.upcomingProducts
@@ -285,6 +287,7 @@ app.put('/api/admin/settings', authAdmin, (req, res) => {
     shippingInfoText,
     careInstructions,
     googleSheetsCsvUrl,
+    googleAnalyticsId,
     kits,
     shippingMethods,
     newUsername,
@@ -300,6 +303,7 @@ app.put('/api/admin/settings', authAdmin, (req, res) => {
   if (shippingInfoText !== undefined) db.settings.shippingInfoText = sanitizeText(shippingInfoText);
   if (careInstructions !== undefined) db.settings.careInstructions = sanitizeText(careInstructions);
   if (googleSheetsCsvUrl !== undefined) db.settings.googleSheetsCsvUrl = googleSheetsCsvUrl.trim();
+  if (googleAnalyticsId !== undefined) db.settings.googleAnalyticsId = googleAnalyticsId.trim();
   if (Array.isArray(kits)) db.settings.kits = kits;
   if (Array.isArray(shippingMethods)) db.settings.shippingMethods = shippingMethods;
 

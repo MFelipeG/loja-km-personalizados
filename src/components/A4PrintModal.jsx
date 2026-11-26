@@ -106,37 +106,37 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
   return (
     <>
       {/* Visual Modal Dialog */}
-      <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto no-print">
-        <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden flex flex-col max-h-[95vh]">
+      <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-1 sm:p-4 overflow-y-auto no-print">
+        <div className="relative w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[95vh]">
           
           {/* Header com Nome da Pessoa e Número do Pedido */}
-          <div className="px-6 py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand text-atelier-50 flex items-center justify-center shadow-xs">
-                <Printer className="w-5 h-5" />
+          <div className="px-3 sm:px-6 py-3 sm:py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-brand text-atelier-50 flex items-center justify-center shadow-xs shrink-0">
+                <Printer className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <h3 className="font-serif font-bold text-lg text-brand-dark flex items-center gap-2">
-                  <span>{order.customerName ? `${order.customerName} • Pedido ${order.code}` : `Pedido ${order.code}`}</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-sans font-bold">
+              <div className="min-w-0">
+                <h3 className="font-serif font-bold text-sm sm:text-lg text-brand-dark flex flex-wrap items-center gap-1.5 sm:gap-2 leading-tight">
+                  <span className="truncate">{order.customerName ? `${order.customerName} • Pedido ${order.code}` : `Pedido ${order.code}`}</span>
+                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-sans font-bold">
                     300 DPI
                   </span>
                   {brightness > 0 && (
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-sans font-bold flex items-center gap-1">
+                    <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-sans font-bold flex items-center gap-1">
                       <Sun className="w-3 h-3 text-amber-600" />
-                      <span>Brilho +{brightness}%</span>
+                      <span>+{brightness}%</span>
                     </span>
                   )}
                 </h3>
-                <p className="text-xs text-atelier-500">
-                  Cliente: <strong className="text-brand-dark">{order.customerName || 'Não especificado'}</strong> • Pedido <strong>{order.code}</strong> • {order.items?.length || 0} fotos (61x61mm) • Gabarito A4 300 DPI
+                <p className="text-[11px] sm:text-xs text-atelier-500 truncate">
+                  Cliente: <strong className="text-brand-dark">{order.customerName || 'Não especificado'}</strong> • Pedido <strong>{order.code}</strong> • {order.items?.length || 0} fotos
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-2 text-atelier-400 hover:text-atelier-700 hover:bg-atelier-200/60 rounded-full transition-colors cursor-pointer"
+              className="p-1.5 text-atelier-400 hover:text-atelier-700 hover:bg-atelier-200/60 rounded-full transition-colors cursor-pointer shrink-0"
               title="Fechar"
             >
               <X className="w-5 h-5" />
@@ -144,7 +144,7 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
           </div>
 
           {/* Barra de Brilho de Impressão (Compensação Anti-Escurecimento) */}
-          <div className="px-6 py-2.5 bg-amber-50/80 border-b border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="px-3 sm:px-6 py-2.5 bg-amber-50/80 border-b border-amber-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 font-bold text-amber-950">
                 <Sun className="w-4 h-4 text-amber-600" />
@@ -196,7 +196,7 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
           </div>
 
           {/* Action Toolbar */}
-          <div className="px-6 py-3 bg-atelier-100/70 border-b border-atelier-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="px-3 sm:px-6 py-2.5 sm:py-3 bg-atelier-100/70 border-b border-atelier-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
             {/* Pagination Controls */}
             <div className="flex items-center gap-2">
               <button
@@ -206,7 +206,7 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="font-bold text-atelier-800">
+              <span className="font-bold text-atelier-800 text-[11px] sm:text-xs">
                 Folha {activePageIndex + 1} de {totalPages}
               </span>
               <button
@@ -221,51 +221,51 @@ export default function A4PrintModal({ isOpen, onClose, order }) {
             {/* Guide Toggle */}
             <button
               onClick={() => setShowSafeGuide(!showSafeGuide)}
-              className={`px-3 py-1.5 rounded-xl border font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border font-semibold flex items-center gap-1.5 transition-colors text-[11px] sm:text-xs ${
                 showSafeGuide
                   ? 'bg-brand/10 text-brand border-brand/20'
                   : 'bg-white text-atelier-700 border-atelier-300'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>{showSafeGuide ? 'Guias 5,0cm Ativas' : 'Mostrar Linhas 5,0cm'}</span>
+              <span>{showSafeGuide ? 'Guias 5cm' : 'Linhas 5cm'}</span>
             </button>
 
             {/* Print & Download Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto pt-1 sm:pt-0">
               <button
                 onClick={handleDownloadPNG}
                 disabled={downloading || loadingCanvas}
-                className="px-3.5 py-2 rounded-xl bg-white hover:bg-atelier-50 text-atelier-800 font-bold border border-atelier-300 shadow-xs flex items-center gap-1.5 cursor-pointer"
-                title="Baixar esta folha como imagem PNG em 300 DPI (2480x3508px)"
+                className="flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-atelier-50 text-atelier-800 font-bold border border-atelier-300 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-[11px] sm:text-xs"
+                title="Baixar esta folha como imagem PNG em 300 DPI"
               >
-                <ImageIcon className="w-4 h-4 text-brand" />
-                <span>Baixar PNG</span>
+                <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand" />
+                <span>PNG</span>
               </button>
 
               <button
                 onClick={handleDownloadPDF}
                 disabled={downloading}
-                className="px-3.5 py-2 rounded-xl bg-white hover:bg-atelier-50 text-atelier-800 font-bold border border-atelier-300 shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-atelier-50 text-atelier-800 font-bold border border-atelier-300 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-[11px] sm:text-xs"
                 title="Baixar todas as páginas em um único arquivo PDF pronto para gráfica"
               >
-                <FileText className="w-4 h-4 text-emerald-700" />
-                <span>Baixar PDF</span>
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
+                <span>PDF</span>
               </button>
 
               <button
                 onClick={handleDirectPrint}
-                className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-dark text-atelier-50 font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-xl bg-brand hover:bg-brand-dark text-atelier-50 font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-[11px] sm:text-xs"
                 title="Imprimir direto na sua impressora na escala exata de 100%"
               >
-                <Printer className="w-4 h-4" />
-                <span>Imprimir Direto</span>
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Imprimir</span>
               </button>
             </div>
           </div>
 
           {/* Canvas A4 Sheet Preview Display */}
-          <div className="p-4 sm:p-6 bg-atelier-200/50 overflow-y-auto flex items-center justify-center min-h-[480px]">
+          <div className="p-2 sm:p-6 bg-atelier-200/50 overflow-y-auto flex items-center justify-center min-h-[320px] sm:min-h-[480px]">
             {loadingCanvas ? (
               <div className="text-center space-y-2">
                 <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
