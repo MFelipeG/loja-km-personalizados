@@ -42,6 +42,8 @@ const defaultDb = {
     shippingInfoText: 'Envios para todo Portugal Continental e Ilhas via CTT Correio Verde ou CTT Registado com rastreio, ou levantamento em cacifo InPost 24h. Embalagem reforçada anti-impacto para máxima proteção.',
     careInstructions: 'Limpe apenas com um pano macio e seco. Não utilize álcool ou produtos químicos abrasivos. Evite exposição direta e prolongada ao sol intenso.',
     googleSheetsCsvUrl: 'https://docs.google.com/spreadsheets/d/1e4iCyvMsLaz2zGzrW0mqcosvbHDLmhwdpnbuXzeoSxo/export?format=csv',
+    stockWebhookUrl: 'https://script.google.com/macros/s/AKfycbzHDz-ph4CPy65wZhTW8wBM6K4bJjhRb1cPl3JAmSOFaI3K77rMn7_G2Mtda8LUNfnx/exec',
+    googleAnalyticsId: 'GTM-NLJPFJV8',
     kits: [
       {
         id: 'minimo-2',
@@ -426,6 +428,31 @@ app.post('/api/orders', (req, res) => {
     db.orders.unshift(newOrder);
     saveDb(db);
 
+    // Baixa automática no Estoque (Google Sheets) via Apps Script Webhook
+    const webhookUrl = db.settings?.stockWebhookUrl || 'https://script.google.com/macros/s/AKfycbzHDz-ph4CPy65wZhTW8wBM6K4bJjhRb1cPl3JAmSOFaI3K77rMn7_G2Mtda8LUNfnx/exec';
+    const totalUnits = Number(newOrder.quantity) || newOrder.items.length || 2;
+    
+    // Insumos e Plástico Laminador têm baixa equivalente ao número de bótons
+    const itemsToDeduct = [
+      { item: 'Insumos', quantity: totalUnits },
+      { item: 'Plástico Laminador', quantity: totalUnits }
+    ];
+
+    (async () => {
+      for (const d of itemsToDeduct) {
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item: d.item, quantity: d.quantity }),
+            redirect: 'follow'
+          });
+        } catch (e) {
+          console.warn(`[Estoque Webhook] Erro ao dar baixa em ${d.item}:`, e.message);
+        }
+      }
+    })();
+
     res.json({ success: true, order: newOrder });
   } catch (err) {
     console.error('Error creating order:', err);
@@ -682,6 +709,32 @@ app.get('/api/admin/stock', authAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error fetching stock from Google Sheets:', err);
     res.status(500).json({ error: 'Erro ao carregar estoque do Google Sheets: ' + err.message });
+  }
+});
+
+// 18. Stock: Admin Manual Deduction via Webhook
+app.post('/api/admin/stock/deduct', authAdmin, async (req, res) => {
+  try {
+    const { item, quantity } = req.body;
+    const db = getDb();
+    const webhookUrl = db.settings?.stockWebhookUrl || 'https://script.google.com/macros/s/AKfycbzHDz-ph4CPy65wZhTW8wBM6K4bJjhRb1cPl3JAmSOFaI3K77rMn7_G2Mtda8LUNfnx/exec';
+
+    if (!item || !quantity) {
+      return res.status(400).json({ error: 'Informe o item e a quantidade para dar baixa.' });
+    }
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item: String(item).trim(), quantity: Number(quantity) }),
+      redirect: 'follow'
+    });
+
+    const result = await response.json();
+    res.json({ success: true, result });
+  } catch (err) {
+    console.error('Erro ao dar baixa manual no estoque:', err);
+    res.status(500).json({ error: 'Erro ao comunicar com o Google Apps Script: ' + err.message });
   }
 });
 

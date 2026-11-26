@@ -80,6 +80,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
     shippingInfoText: '',
     careInstructions: '',
     googleSheetsCsvUrl: '',
+    stockWebhookUrl: '',
     googleAnalyticsId: 'GTM-NLJPFJV8',
     kits: [],
     shippingMethods: [],
@@ -146,6 +147,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
           shippingInfoText: data.shippingInfoText || '',
           careInstructions: data.careInstructions || '',
           googleSheetsCsvUrl: data.googleSheetsCsvUrl || '',
+          stockWebhookUrl: data.stockWebhookUrl || 'https://script.google.com/macros/s/AKfycbzHDz-ph4CPy65wZhTW8wBM6K4bJjhRb1cPl3JAmSOFaI3K77rMn7_G2Mtda8LUNfnx/exec',
           googleAnalyticsId: data.googleAnalyticsId || 'GTM-NLJPFJV8',
           kits: data.kits || [],
           shippingMethods: data.shippingMethods || [],
@@ -1041,6 +1043,28 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     value={settingsForm.googleSheetsCsvUrl}
                     onChange={(e) => setSettingsForm({ ...settingsForm, googleSheetsCsvUrl: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-atelier-300 focus:outline-none focus:border-brand font-mono"
+                  />
+                </div>
+
+                {/* Google Apps Script Webhook URL for Automatic Stock Deduction */}
+                <div className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold text-emerald-900 text-xs sm:text-sm">
+                      Webhook Google Apps Script (Baixa Automática no Estoque)
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Ativo na Coluna F (Saídas)
+                    </span>
+                  </div>
+                  <p className="text-emerald-700 text-[11px]">
+                    URL gerado pela sua aplicação web no Google Sheets para atualizar vendas em tempo real:
+                  </p>
+                  <input
+                    type="url"
+                    placeholder="https://script.google.com/macros/s/.../exec"
+                    value={settingsForm.stockWebhookUrl}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, stockWebhookUrl: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 bg-white focus:outline-none focus:border-emerald-600 font-mono text-xs"
                   />
                 </div>
 
