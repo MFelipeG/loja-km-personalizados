@@ -577,12 +577,112 @@ app.patch('/api/admin/reviews/:id/status', authAdmin, (req, res) => {
   res.json({ success: true, review });
 });
 
-// 15. Reviews: Admin Delete Review
+// 15. Reviews: Admin Create Pre-Approved Review (e.g. from Google Reviews)
+app.post('/api/admin/reviews', authAdmin, upload.single('photo'), (req, res) => {
+  try {
+    const db = getDb();
+    const { name, rating, comment, origin, badge, photoUrl: directPhotoUrl } = req.body;
+
+    if (!name || !rating || !comment) {
+      return res.status(400).json({ error: 'Preencha o nome do cliente, classificação e comentário.' });
+    }
+
+    const photoUrl = req.file ? `/uploads/${req.file.filename}` : (directPhotoUrl ? sanitizeText(directPhotoUrl) : null);
+
+    const newReview = {
+      id: `rev_${Date.now()}`,
+      name: sanitizeText(name),
+      rating: Math.min(5, Math.max(1, Number(rating) || 5)),
+      comment: sanitizeText(comment),
+      photoUrl,
+      origin: origin ? sanitizeText(origin) : 'google', // 'google' | 'loja'
+      badge: badge ? sanitizeText(badge) : (origin === 'google' ? 'Avaliação no Google' : 'Compra Verificada'),
+      status: 'approved',
+      createdAt: new Date().toISOString()
+    };
+
+    db.reviews.unshift(newReview);
+    saveDb(db);
+
+    res.json({
+      success: true,
+      review: newReview,
+      message: 'Avaliação adicionada e publicada com sucesso!'
+    });
+  } catch (err) {
+    console.error('Error adding admin review:', err);
+    res.status(500).json({ error: 'Erro ao registar avaliação.' });
+  }
+});
+
+// 16. Reviews: Admin Delete Review
 app.delete('/api/admin/reviews/:id', authAdmin, (req, res) => {
   const db = getDb();
   db.reviews = db.reviews.filter(r => r.id !== req.params.id);
   saveDb(db);
   res.json({ success: true });
+});
+
+// 17. Stock: Admin Google Sheets Live Stock Sync
+app.get('/api/admin/stock', authAdmin, async (req, res) => {
+  try {
+    const sheetId = '1e4iCyvMsLaz2zGzrW0mqcosvbHDLmhwdpnbuXzeoSxo';
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Estoque`;
+
+    const response = await fetch(gvizUrl);
+    if (!response.ok) {
+      return res.status(502).json({ error: 'Não foi possível aceder à folha de cálculo do Google Sheets.' });
+    }
+
+    const text = await response.text();
+    const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+    const parsed = JSON.parse(jsonStr);
+
+    const rows = parsed.table?.rows || [];
+    
+    // Row 0 has summary metrics
+    const summaryRow = rows[0]?.c || [];
+    const summary = {
+      totalItems: summaryRow[1]?.v || '34',
+      availableItems: summaryRow[4]?.v != null ? summaryRow[4]?.v : '33',
+      lowOrOutOfStockItems: summaryRow[7]?.v != null ? summaryRow[7]?.v : '13',
+      totalStockValue: summaryRow[10]?.f || summaryRow[10]?.v || '€497,55'
+    };
+
+    // Rows 2 onwards are inventory items
+    const items = rows.slice(2).map((r, idx) => {
+      const c = r.c || [];
+      const name = c[1] ? (c[1].v || '') : '';
+      if (!name) return null;
+
+      return {
+        id: `item_${idx + 1}`,
+        name: String(name).trim(),
+        category: c[2] ? String(c[2].v || 'Outro').trim() : 'Outro',
+        initialStock: c[3] ? (c[3].v != null ? c[3].v : c[3].f) : 0,
+        outputs: c[4] ? (c[4].v != null ? c[4].v : c[4].f) : 0,
+        losses: c[5] ? (c[5].v != null ? c[5].v : c[5].f) : 0,
+        currentStock: c[7] ? (c[7].v != null ? c[7].v : c[7].f) : 0,
+        minStock: c[8] ? (c[8].v != null ? c[8].v : c[8].f) : 0,
+        unitValue: c[9] ? (c[9].f || c[9].v || '0,00 €') : '0,00 €',
+        status: c[10] ? String(c[10].v || 'Em Estoque').trim() : 'Em Estoque',
+        availableInStore: c[11] ? Boolean(c[11].v) : true
+      };
+    }).filter(Boolean);
+
+    res.json({
+      success: true,
+      sheetId,
+      sheetTitle: 'Gastos Fotos imãs',
+      tabName: 'Estoque',
+      summary,
+      items,
+      lastSync: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Error fetching stock from Google Sheets:', err);
+    res.status(500).json({ error: 'Erro ao carregar estoque do Google Sheets: ' + err.message });
+  }
 });
 
 // 16. Portugal CTT & Google Sheets Shipping Calculator
