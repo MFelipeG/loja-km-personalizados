@@ -29,7 +29,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Shield,
-  Gift
+  Gift,
+  Pencil,
+  Image as ImageIcon
 } from 'lucide-react';
 import A4PrintModal from './A4PrintModal';
 
@@ -75,6 +77,28 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
   const [newAddonImageFile, setNewAddonImageFile] = useState(null);
   const [newAddonImagePreview, setNewAddonImagePreview] = useState(null);
   const [submittingAddon, setSubmittingAddon] = useState(false);
+
+  // Review Editing state
+  const [editingReview, setEditingReview] = useState(null);
+  const [editReviewName, setEditReviewName] = useState('');
+  const [editReviewRating, setEditReviewRating] = useState(5);
+  const [editReviewComment, setEditReviewComment] = useState('');
+  const [editReviewOrigin, setEditReviewOrigin] = useState('google');
+  const [editReviewExistingPhotos, setEditReviewExistingPhotos] = useState([]);
+  const [editReviewNewPhotoFiles, setEditReviewNewPhotoFiles] = useState([]);
+  const [editReviewNewPhotoPreviews, setEditReviewNewPhotoPreviews] = useState([]);
+  const [submittingEditReview, setSubmittingEditReview] = useState(false);
+
+  // Addon Editing state
+  const [editingAddon, setEditingAddon] = useState(null);
+  const [editAddonName, setEditAddonName] = useState('');
+  const [editAddonPrice, setEditAddonPrice] = useState('');
+  const [editAddonSheetItem, setEditAddonSheetItem] = useState('');
+  const [editAddonDesc, setEditAddonDesc] = useState('');
+  const [editAddonImageFile, setEditAddonImageFile] = useState(null);
+  const [editAddonImagePreview, setEditAddonImagePreview] = useState(null);
+  const [editAddonRemoveImage, setEditAddonRemoveImage] = useState(false);
+  const [submittingEditAddon, setSubmittingEditAddon] = useState(false);
 
   // Stock state from Google Sheets
   const [stockData, setStockData] = useState(null);
@@ -238,6 +262,68 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
     }
   };
 
+  // Handle start editing review
+  const handleStartEditReview = (rev) => {
+    setEditingReview(rev);
+    setEditReviewName(rev.name || '');
+    setEditReviewRating(rev.rating || 5);
+    setEditReviewComment(rev.comment || '');
+    setEditReviewOrigin(rev.origin || 'google');
+    const existing = (rev.photos && rev.photos.length) ? [...rev.photos] : (rev.photoUrl ? [rev.photoUrl] : []);
+    setEditReviewExistingPhotos(existing);
+    setEditReviewNewPhotoFiles([]);
+    setEditReviewNewPhotoPreviews([]);
+  };
+
+  // Handle remove existing photo when editing
+  const handleRemoveExistingReviewPhoto = (index) => {
+    setEditReviewExistingPhotos((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  // Handle save edited review
+  const handleSaveEditReview = async (e) => {
+    e.preventDefault();
+    if (!editingReview) return;
+    if (!editReviewName.trim() || !editReviewComment.trim()) {
+      alert('Preencha o nome do cliente e o comentário.');
+      return;
+    }
+
+    setSubmittingEditReview(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', editReviewName.trim());
+      formData.append('rating', editReviewRating);
+      formData.append('comment', editReviewComment.trim());
+      formData.append('origin', editReviewOrigin);
+      formData.append('badge', editReviewOrigin === 'google' ? 'Avaliação no Google' : 'Compra Verificada');
+      formData.append('existingPhotos', JSON.stringify(editReviewExistingPhotos));
+
+      editReviewNewPhotoFiles.forEach((file) => {
+        formData.append('photos', file);
+      });
+
+      const res = await fetch(`/api/admin/reviews/${editingReview.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        setEditingReview(null);
+        fetchReviews(token);
+        alert('Depoimento e fotos atualizados com sucesso!');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Erro ao salvar alterações.');
+      }
+    } catch (err) {
+      alert('Erro de conexão ao salvar: ' + err.message);
+    } finally {
+      setSubmittingEditReview(false);
+    }
+  };
+
   // Addons / Embalagens handlers
   const fetchAddons = async () => {
     setLoadingAddons(true);
@@ -328,6 +414,60 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
       }
     } catch (err) {
       console.error('Error toggling addon:', err);
+    }
+  };
+
+  // Handle start editing addon
+  const handleStartEditAddon = (addon) => {
+    setEditingAddon(addon);
+    setEditAddonName(addon.name || '');
+    setEditAddonPrice(addon.price !== undefined ? addon.price : '');
+    setEditAddonSheetItem(addon.sheetItemName || '');
+    setEditAddonDesc(addon.description || '');
+    setEditAddonImageFile(null);
+    setEditAddonImagePreview(null);
+    setEditAddonRemoveImage(false);
+  };
+
+  // Handle save edited addon
+  const handleSaveEditAddon = async (e) => {
+    e.preventDefault();
+    if (!editingAddon) return;
+    if (!editAddonName.trim()) {
+      alert('Informe o nome do produto ou embalagem.');
+      return;
+    }
+
+    setSubmittingEditAddon(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', editAddonName.trim());
+      formData.append('price', Number(editAddonPrice) || 0);
+      formData.append('sheetItemName', editAddonSheetItem.trim());
+      formData.append('description', editAddonDesc.trim());
+      formData.append('removeImage', editAddonRemoveImage ? 'true' : 'false');
+      if (editAddonImageFile) {
+        formData.append('image', editAddonImageFile);
+      }
+
+      const res = await fetch(`/api/admin/addons/${editingAddon.id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        setEditingAddon(null);
+        fetchAddons();
+        alert('Embalagem / Produto Adicional atualizado com sucesso!');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Erro ao atualizar item.');
+      }
+    } catch (err) {
+      alert('Erro de conexão ao salvar: ' + err.message);
+    } finally {
+      setSubmittingEditAddon(false);
     }
   };
 
@@ -1063,16 +1203,27 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                             </span>
                           </div>
                           <p className="text-atelier-700 italic">"{rev.comment}"</p>
-                          {rev.photoUrl && (
-                            <a
-                              href={rev.photoUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[11px] text-brand hover:underline inline-block pt-1"
-                            >
-                              Ver Foto Enviada pelo Cliente
-                            </a>
-                          )}
+                          {(() => {
+                            const pList = (rev.photos && rev.photos.length) ? rev.photos : (rev.photoUrl ? [rev.photoUrl] : []);
+                            if (!pList.length) return null;
+                            return (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                                {pList.map((p, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={p}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-10 h-10 rounded-lg overflow-hidden border border-atelier-200 hover:border-brand shrink-0 block group relative shadow-2xs"
+                                    title="Ver foto em tamanho real"
+                                  >
+                                    <img src={p} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                  </a>
+                                ))}
+                                <span className="text-[10px] text-atelier-400 font-medium">({pList.length} {pList.length === 1 ? 'foto' : 'fotos'})</span>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
@@ -1094,6 +1245,14 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                             </button>
                           )}
                           <button
+                            onClick={() => handleStartEditReview(rev)}
+                            className="px-2.5 py-1.5 bg-atelier-100 hover:bg-atelier-200 text-atelier-800 text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Editar depoimento e gerenciar fotos"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-brand" />
+                            <span>Editar</span>
+                          </button>
+                          <button
                             onClick={() => handleDeleteReview(rev.id)}
                             className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                             title="Eliminar"
@@ -1103,6 +1262,191 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Modal de Edição de Depoimento & Gerenciador de Fotos */}
+                {editingReview && (
+                  <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-6 animate-in zoom-in-95 duration-150">
+                      <div className="px-5 py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Pencil className="w-4 h-4 text-brand" />
+                          <h4 className="font-serif font-bold text-base text-brand-dark">Editar Depoimento</h4>
+                        </div>
+                        <button
+                          onClick={() => setEditingReview(null)}
+                          className="text-atelier-400 hover:text-atelier-700 text-sm p-1 rounded-full cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSaveEditReview} className="p-5 space-y-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">Nome do Cliente *</label>
+                            <input
+                              type="text"
+                              required
+                              value={editReviewName}
+                              onChange={(e) => setEditReviewName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">Classificação (Estrelas)</label>
+                            <select
+                              value={editReviewRating}
+                              onChange={(e) => setEditReviewRating(Number(e.target.value))}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand font-bold text-amber-600"
+                            >
+                              <option value={5}>⭐⭐⭐⭐⭐ (5/5 Estrelas)</option>
+                              <option value={4}>⭐⭐⭐⭐ (4/5 Estrelas)</option>
+                              <option value={3}>⭐⭐⭐ (3/5 Estrelas)</option>
+                              <option value={2}>⭐⭐ (2/5 Estrelas)</option>
+                              <option value={1}>⭐ (1/5 Estrela)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-atelier-700 mb-1">Origem / Selo</label>
+                          <select
+                            value={editReviewOrigin}
+                            onChange={(e) => setEditReviewOrigin(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                          >
+                            <option value="google">Avaliação no Google (Google Reviews)</option>
+                            <option value="loja">Compra Verificada no Site</option>
+                            <option value="instagram">Instagram (@km_personalisado)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-atelier-700 mb-1">Comentário do Cliente *</label>
+                          <textarea
+                            rows={3}
+                            required
+                            value={editReviewComment}
+                            onChange={(e) => setEditReviewComment(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                          />
+                        </div>
+
+                        {/* Gerenciar Fotos (Colocar e Apagar Foto) */}
+                        <div className="space-y-2 pt-2 border-t border-atelier-100">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-brand-dark">
+                              Fotos do Depoimento ({editReviewExistingPhotos.length + editReviewNewPhotoFiles.length}/3)
+                            </label>
+                            <span className="text-[10.5px] text-atelier-500">
+                              Apague ou adicione fotos diretamente aqui
+                            </span>
+                          </div>
+
+                          {/* Fotos Atuais com botão Apagar Foto */}
+                          {editReviewExistingPhotos.length > 0 && (
+                            <div>
+                              <span className="text-[10px] text-atelier-400 block mb-1">Fotos atuais salvas no site:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {editReviewExistingPhotos.map((photoUrl, idx) => (
+                                  <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-atelier-200 bg-atelier-50 group shadow-2xs">
+                                    <img src={photoUrl} alt={`Foto salva ${idx + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveExistingReviewPhoto(idx)}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-[10px] shadow-md transition-transform hover:scale-110 cursor-pointer"
+                                      title="Apagar esta foto do depoimento"
+                                    >
+                                      ✕
+                                    </button>
+                                    <span className="absolute bottom-1 left-1 px-1 rounded bg-black/60 text-[9px] text-white font-mono">
+                                      {idx + 1}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Novas Fotos Selecionadas para Subir */}
+                          {editReviewNewPhotoPreviews.length > 0 && (
+                            <div>
+                              <span className="text-[10px] text-emerald-700 font-bold block mb-1">Novas fotos a carregar:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {editReviewNewPhotoPreviews.map((preview, idx) => (
+                                  <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-emerald-300 bg-emerald-50 shadow-2xs">
+                                    <img src={preview} alt={`Nova foto ${idx + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditReviewNewPhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+                                        setEditReviewNewPhotoPreviews((prev) => prev.filter((_, i) => i !== idx));
+                                      }}
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-[10px] shadow-md transition-transform hover:scale-110 cursor-pointer"
+                                      title="Remover nova foto"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Botão de Subir Mais Foto (se < 3) */}
+                          {(editReviewExistingPhotos.length + editReviewNewPhotoFiles.length) < 3 && (
+                            <label className="mt-1 px-3.5 py-2 rounded-xl bg-atelier-50 hover:bg-atelier-100 border border-dashed border-atelier-300 text-xs text-brand font-semibold inline-flex items-center gap-2 cursor-pointer transition-colors shadow-2xs">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>+ Adicionar Foto do Computador</span>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    const incoming = Array.from(e.target.files);
+                                    const maxCanAdd = 3 - (editReviewExistingPhotos.length + editReviewNewPhotoFiles.length);
+                                    const toAdd = incoming.slice(0, maxCanAdd);
+                                    if (!toAdd.length) return;
+
+                                    setEditReviewNewPhotoFiles((prev) => [...prev, ...toAdd]);
+                                    toAdd.forEach((f) => {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        setEditReviewNewPhotoPreviews((prev) => [...prev, ev.target.result]);
+                                      };
+                                      reader.readAsDataURL(f);
+                                    });
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-atelier-200">
+                          <button
+                            type="button"
+                            onClick={() => setEditingReview(null)}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold text-atelier-600 hover:bg-atelier-100 cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={submittingEditReview}
+                            className="px-5 py-2 bg-brand hover:bg-brand-dark disabled:bg-atelier-300 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>{submittingEditReview ? 'A guardar...' : 'Salvar Alterações'}</span>
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1792,20 +2136,231 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                               {addon.active !== false ? '● Ativo no Site' : '○ Pausado'}
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAddon(addon.id)}
-                              className="p-1.5 text-atelier-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Excluir embalagem"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditAddon(addon)}
+                                className="px-2.5 py-1 bg-atelier-100 hover:bg-atelier-200 text-atelier-800 rounded-lg font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                                title="Editar produto / embalagem e foto"
+                              >
+                                <Pencil className="w-3 h-3 text-brand" />
+                                <span>Editar</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAddon(addon.id)}
+                                className="p-1.5 text-atelier-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                title="Excluir embalagem"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+
+                {/* Modal to Edit Addon / Packaging & Manage Photo */}
+                {editingAddon && (
+                  <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-atelier-200 overflow-hidden my-6 animate-in zoom-in-95 duration-150">
+                      <div className="px-5 py-4 bg-atelier-50 border-b border-atelier-200 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Pencil className="w-4 h-4 text-brand" />
+                          <h4 className="font-serif font-bold text-base text-brand-dark">
+                            Editar Embalagem / Adicional
+                          </h4>
+                        </div>
+                        <button
+                          onClick={() => setEditingAddon(null)}
+                          className="text-atelier-400 hover:text-atelier-700 text-sm p-1 rounded-full cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSaveEditAddon} className="p-5 space-y-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                              Nome do Produto / Embalagem *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={editAddonName}
+                              onChange={(e) => setEditAddonName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                              Valor Adicional (€) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              required
+                              value={editAddonPrice}
+                              onChange={(e) => setEditAddonPrice(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                              Vincular Linha do Sheets (Estoque)
+                            </label>
+                            <select
+                              value={editAddonSheetItem}
+                              onChange={(e) => setEditAddonSheetItem(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                            >
+                              <option value="">-- Sem vínculo automático --</option>
+                              <option value="Caixas">Caixas (Linha 12)</option>
+                              <option value="Sacolas de Cartao rosa">Sacolas de Cartao rosa (Linha 13)</option>
+                              <option value="Sacos de organza glitter 5un vár cor">Sacos de organza glitter (Linha 14)</option>
+                              <option value="Plástico Laminador">Plástico Laminador (Linha 17)</option>
+                              <option value="Insumos">Insumos (Linha 24)</option>
+                              {stockData?.items && stockData.items.map((it) => (
+                                <option key={it.row} value={it.name}>
+                                  {it.name} (Atual: {it.currentStock} un.)
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                              Descrição Rápida
+                            </label>
+                            <input
+                              type="text"
+                              value={editAddonDesc}
+                              onChange={(e) => setEditAddonDesc(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Gerenciar Foto da Embalagem (Colocar e Apagar Foto) */}
+                        <div className="space-y-2 pt-2 border-t border-atelier-100">
+                          <label className="block text-xs font-semibold text-brand-dark">
+                            Foto da Embalagem / Produto
+                          </label>
+
+                          {/* Foto atual salva */}
+                          {editingAddon.imageUrl && !editAddonRemoveImage && !editAddonImagePreview && (
+                            <div className="flex items-center gap-3 p-2.5 bg-atelier-50 rounded-xl border border-atelier-200">
+                              <img
+                                src={editingAddon.imageUrl}
+                                alt="Foto Atual"
+                                className="w-14 h-14 rounded-lg object-cover border border-atelier-300 shadow-2xs shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[11px] font-semibold text-atelier-700 block">Foto salva no site</span>
+                                <span className="text-[10px] text-atelier-400 block truncate">{editingAddon.imageUrl}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setEditAddonRemoveImage(true)}
+                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Apagar Foto</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Se marcou para remover a foto atual */}
+                          {editAddonRemoveImage && !editAddonImagePreview && (
+                            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
+                              <span className="text-[11px] text-amber-800 font-medium">Foto marcada para ser apagada.</span>
+                              <button
+                                type="button"
+                                onClick={() => setEditAddonRemoveImage(false)}
+                                className="text-[11px] text-brand hover:underline font-semibold cursor-pointer"
+                              >
+                                Desfazer
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Preview da nova foto carregada */}
+                          {editAddonImagePreview && (
+                            <div className="flex items-center gap-3 p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                              <img
+                                src={editAddonImagePreview}
+                                alt="Nova foto"
+                                className="w-14 h-14 rounded-lg object-cover border border-emerald-300 shadow-2xs shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[11px] font-bold text-emerald-800 block">Nova foto pronta para salvar</span>
+                                <span className="text-[10px] text-emerald-600 block">Substituirá a imagem anterior</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditAddonImageFile(null);
+                                  setEditAddonImagePreview(null);
+                                }}
+                                className="text-[11px] text-rose-600 hover:underline cursor-pointer"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Botão de upload de nova foto */}
+                          <label className="px-3.5 py-2 rounded-xl bg-white border border-atelier-300 hover:bg-atelier-100 text-xs text-atelier-700 font-semibold inline-flex items-center gap-2 cursor-pointer shadow-xs">
+                            <Upload className="w-3.5 h-3.5 text-brand" />
+                            <span>{editingAddon.imageUrl && !editAddonRemoveImage ? 'Trocar Foto do Computador' : 'Carregar Foto do Computador'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  setEditAddonImageFile(file);
+                                  setEditAddonRemoveImage(false);
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => setEditAddonImagePreview(ev.target.result);
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-atelier-200">
+                          <button
+                            type="button"
+                            onClick={() => setEditingAddon(null)}
+                            className="px-4 py-2 rounded-xl text-xs font-semibold text-atelier-600 hover:bg-atelier-100 cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={submittingEditAddon}
+                            className="px-5 py-2 bg-brand hover:bg-brand-dark disabled:bg-atelier-300 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>{submittingEditAddon ? 'A guardar...' : 'Salvar Alterações'}</span>
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}

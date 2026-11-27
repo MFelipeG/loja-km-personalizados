@@ -681,6 +681,60 @@ app.delete('/api/admin/reviews/:id', authAdmin, (req, res) => {
   res.json({ success: true });
 });
 
+// 16b. Reviews: Admin Edit Review & Manage Photos
+app.put('/api/admin/reviews/:id', authAdmin, uploadMulti, (req, res) => {
+  try {
+    const db = getDb();
+    const review = db.reviews.find(r => r.id === req.params.id);
+    if (!review) {
+      return res.status(404).json({ error: 'Avaliação não encontrada.' });
+    }
+
+    const { name, rating, comment, origin, badge, existingPhotos } = req.body;
+
+    if (name) review.name = sanitizeText(name);
+    if (rating !== undefined) review.rating = Math.min(5, Math.max(1, Number(rating) || 5));
+    if (comment) review.comment = sanitizeText(comment);
+    if (origin) {
+      review.origin = sanitizeText(origin);
+      review.badge = badge ? sanitizeText(badge) : (review.origin === 'google' ? 'Avaliação no Google' : 'Compra Verificada');
+    } else if (badge) {
+      review.badge = sanitizeText(badge);
+    }
+
+    // Parse existing photos to keep
+    let keptPhotos = [];
+    if (existingPhotos !== undefined) {
+      if (typeof existingPhotos === 'string') {
+        try {
+          keptPhotos = JSON.parse(existingPhotos);
+        } catch {
+          keptPhotos = existingPhotos ? [existingPhotos] : [];
+        }
+      } else if (Array.isArray(existingPhotos)) {
+        keptPhotos = existingPhotos;
+      }
+    } else {
+      keptPhotos = review.photos || (review.photoUrl ? [review.photoUrl] : []);
+    }
+
+    // Newly uploaded files
+    const uploadedFiles = (req.files?.photos || []).concat(req.files?.photo || []).concat(req.files?.image || []);
+    if (req.file) uploadedFiles.push(req.file);
+    const newPhotos = uploadedFiles.map(f => `/uploads/${f.filename}`);
+
+    const allPhotos = [...keptPhotos, ...newPhotos].slice(0, 3);
+    review.photos = allPhotos;
+    review.photoUrl = allPhotos[0] || null;
+
+    saveDb(db);
+    res.json({ success: true, review, message: 'Avaliação atualizada com sucesso!' });
+  } catch (err) {
+    console.error('Error updating review:', err);
+    res.status(500).json({ error: 'Erro ao atualizar avaliação: ' + err.message });
+  }
+});
+
 // 17. Stock: Admin Google Sheets Live Stock Sync
 app.get('/api/admin/stock', authAdmin, async (req, res) => {
   try {
@@ -822,20 +876,29 @@ app.delete('/api/admin/addons/:id', authAdmin, (req, res) => {
 });
 
 // 22. Addons: Admin Toggle / Update Addon
-app.patch('/api/admin/addons/:id', authAdmin, (req, res) => {
+app.patch('/api/admin/addons/:id', authAdmin, upload.single('image'), (req, res) => {
   const db = getDb();
   const addon = (db.settings?.addons || []).find(a => a.id === req.params.id);
   if (!addon) {
     return res.status(404).json({ error: 'Item não encontrado.' });
   }
 
-  if (req.body.active !== undefined) addon.active = Boolean(req.body.active);
+  if (req.body.active !== undefined) addon.active = String(req.body.active) === 'true' || req.body.active === true;
   if (req.body.name) addon.name = sanitizeText(req.body.name);
   if (req.body.price !== undefined) addon.price = Number(req.body.price);
   if (req.body.sheetItemName !== undefined) addon.sheetItemName = sanitizeText(req.body.sheetItemName);
+  if (req.body.description !== undefined) addon.description = sanitizeText(req.body.description);
+
+  if (req.file) {
+    addon.imageUrl = `/uploads/${req.file.filename}`;
+  } else if (req.body.removeImage === 'true' || req.body.removeImage === true) {
+    addon.imageUrl = '';
+  } else if (req.body.imageUrl !== undefined) {
+    addon.imageUrl = sanitizeText(req.body.imageUrl);
+  }
 
   saveDb(db);
-  res.json({ success: true, addon });
+  res.json({ success: true, addon, message: 'Produto adicional atualizado com sucesso!' });
 });
 
 // 16. Portugal CTT & Google Sheets Shipping Calculator
