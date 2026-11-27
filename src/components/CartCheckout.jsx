@@ -51,6 +51,21 @@ export default function CartCheckout({
 
   const [selectedMethodId, setSelectedMethodId] = useState(shippingMethods[0]?.id || 'ctt-verde');
 
+  // Addons / Embalagens Especiais de Presente
+  const [addons, setAddons] = useState(settings?.addons || []);
+  const [selectedAddonId, setSelectedAddonId] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/addons')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setAddons(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Order submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
@@ -125,7 +140,9 @@ export default function CartCheckout({
 
   const selectedShipping = shippingMethods.find((m) => m.id === selectedMethodId) || shippingMethods[0];
   const shippingFee = selectedShipping ? selectedShipping.fee : 2.70;
-  const grandTotal = subtotal + shippingFee;
+  const selectedAddon = addons.find((a) => a.id === selectedAddonId);
+  const addonFee = selectedAddon ? Number(selectedAddon.price) || 0 : 0;
+  const grandTotal = subtotal + shippingFee + addonFee;
 
   // Submit Order and Launch WhatsApp with Welcome Message & #BOT-XXXX
   const handleFinishOrder = async () => {
@@ -154,6 +171,15 @@ export default function CartCheckout({
         shippingFee,
         shippingType: selectedShipping.name,
         estimatedDays: selectedShipping.days,
+        packaging: selectedAddon
+          ? {
+              id: selectedAddon.id,
+              name: selectedAddon.name,
+              price: Number(selectedAddon.price) || 0,
+              sheetItemName: selectedAddon.sheetItemName || selectedAddon.name
+            }
+          : null,
+        packagingFee: addonFee,
         currency: '€',
         address: {
           postalCode: postalCode.trim(),
@@ -205,6 +231,10 @@ export default function CartCheckout({
         ? `${street}, ${number || 'S/N'}${complement ? ` (${complement})` : ''} - ${postalCode || ''} ${concelho || ''}`
         : 'A combinar no WhatsApp';
 
+      const packagingInfo = selectedAddon
+        ? `🎁 *Embalagem Escolhida:* ${selectedAddon.name} (+${Number(selectedAddon.price).toFixed(2).replace('.', ',')} €)\n`
+        : `🎁 *Embalagem:* Padrão de Envio (Grátis)\n`;
+
       const msg = `Olá KM Personalizados! ✨\n` +
         `Acabei de montar o meu pedido no vosso site!\n\n` +
         `📦 *NÚMERO DO PEDIDO:* ${order.code}\n` +
@@ -212,6 +242,7 @@ export default function CartCheckout({
         `📱 *Contacto:* ${order.customerPhone}\n` +
         `🖼️ *Quantidade:* ${order.quantity} Bótons Ímãs Quadrados (${order.kitName})\n` +
         `💰 *Subtotal:* ${order.subtotal.toFixed(2).replace('.', ',')} €\n` +
+        packagingInfo +
         `🚚 *Envio:* ${order.shippingType} (${order.shippingFee.toFixed(2).replace('.', ',')} €)\n` +
         `💵 *TOTAL A PAGAR:* ${order.total.toFixed(2).replace('.', ',')} €\n\n` +
         `📍 *Morada de Entrega:* ${fullAddressStr}\n\n` +
@@ -314,6 +345,12 @@ export default function CartCheckout({
                   <span>Subtotal:</span>
                   <span className="font-semibold">{completedOrder.subtotal.toFixed(2).replace('.', ',')} €</span>
                 </div>
+                {completedOrder.packaging && (
+                  <div className="flex justify-between text-brand font-medium">
+                    <span>Embalagem:</span>
+                    <span className="font-semibold">{completedOrder.packaging.name} (+{Number(completedOrder.packaging.price).toFixed(2).replace('.', ',')} €)</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Envio ({completedOrder.shippingType}):</span>
                   <span className="font-semibold">{completedOrder.shippingFee.toFixed(2).replace('.', ',')} €</span>
@@ -381,6 +418,92 @@ export default function CartCheckout({
                     * Como a promoção é limitada a 1 combo por cliente/pedido, as primeiras 6 unidades foram calculadas no valor promocional de 25 €, e as unidades adicionais na tabela normal.
                   </p>
                 )}
+              </div>
+
+              {/* Packaging / Add-ons Selection */}
+              <div className="bg-white rounded-2xl p-4 border border-atelier-200 shadow-xs space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
+                  <span className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-brand" />
+                    <span>Deseja Adicionar uma Embalagem Especial para Presente?</span>
+                  </span>
+                  <span className="text-[10px] text-brand bg-brand-cream/80 px-2 py-0.5 rounded-full font-medium">
+                    Opcional
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Option: Standard Packaging */}
+                  <div
+                    onClick={() => setSelectedAddonId(null)}
+                    className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-3 ${
+                      selectedAddonId === null
+                        ? 'border-brand bg-brand-cream/60 ring-2 ring-brand/10'
+                        : 'border-atelier-200 hover:bg-atelier-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="packagingChoice"
+                      checked={selectedAddonId === null}
+                      onChange={() => setSelectedAddonId(null)}
+                      className="accent-brand mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-brand-dark">Embalagem Padrão</span>
+                        <span className="text-emerald-700 font-bold text-[11px]">Grátis</span>
+                      </div>
+                      <p className="text-[11px] text-atelier-500 mt-0.5">
+                        Envelope almofadado seguro e discreto para proteção no envio.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Addons */}
+                  {addons.map((addon) => {
+                    const isSelected = selectedAddonId === addon.id;
+                    return (
+                      <div
+                        key={addon.id}
+                        onClick={() => setSelectedAddonId(addon.id)}
+                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-3 ${
+                          isSelected
+                            ? 'border-brand bg-brand-cream/60 ring-2 ring-brand/10'
+                            : 'border-atelier-200 hover:bg-atelier-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="packagingChoice"
+                          checked={isSelected}
+                          onChange={() => setSelectedAddonId(addon.id)}
+                          className="accent-brand mt-1"
+                        />
+                        {addon.imageUrl && (
+                          <img
+                            src={addon.imageUrl}
+                            alt={addon.name}
+                            className="w-12 h-12 object-cover rounded-lg border border-atelier-200 shrink-0 shadow-2xs"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-bold text-brand-dark truncate">{addon.name}</span>
+                            <span className="text-brand font-bold text-xs whitespace-nowrap">
+                              +{Number(addon.price).toFixed(2).replace('.', ',')} €
+                            </span>
+                          </div>
+                          {addon.description && (
+                            <p className="text-[10.5px] text-atelier-500 line-clamp-2 mt-0.5 leading-snug">
+                              {addon.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Shipping Selection (Portugal CTT & Google Sheets Options) */}
@@ -532,6 +655,12 @@ export default function CartCheckout({
                   <span>Subtotal ({count} bótons):</span>
                   <span className="font-semibold">{subtotal.toFixed(2).replace('.', ',')} €</span>
                 </div>
+                {addonFee > 0 && selectedAddon && (
+                  <div className="flex justify-between text-brand font-medium">
+                    <span>Embalagem Especial ({selectedAddon.name}):</span>
+                    <span className="font-semibold">+{addonFee.toFixed(2).replace('.', ',')} €</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Envio ({selectedShipping.name}):</span>
                   <span className="font-semibold">

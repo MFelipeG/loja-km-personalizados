@@ -5,13 +5,14 @@ export default function ReviewsSection() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [zoomedPhoto, setZoomedPhoto] = useState(null);
 
   // Form states
   const [name, setName] = useState('');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const [photo, setPhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState('');
 
@@ -35,12 +36,22 @@ export default function ReviewsSection() {
   }, []);
 
   const handlePhotoSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhoto(file);
-      const reader = new FileReader();
-      reader.onload = (ev) => setPhotoPreview(ev.target.result);
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+      const selected = Array.from(e.target.files).slice(0, 3);
+      setPhotos(selected);
+      const previews = [];
+      let loaded = 0;
+      selected.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previews[idx] = ev.target.result;
+          loaded++;
+          if (loaded === selected.length) {
+            setPhotoPreviews([...previews]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -59,8 +70,8 @@ export default function ReviewsSection() {
       formData.append('name', name.trim());
       formData.append('rating', rating);
       formData.append('comment', comment.trim());
-      if (photo) {
-        formData.append('photo', photo);
+      if (photos.length > 0) {
+        photos.forEach((f) => formData.append('photos', f));
       }
 
       const res = await fetch('/api/reviews', {
@@ -74,8 +85,8 @@ export default function ReviewsSection() {
         setName('');
         setRating(5);
         setComment('');
-        setPhoto(null);
-        setPhotoPreview(null);
+        setPhotos([]);
+        setPhotoPreviews([]);
       } else {
         alert('Erro ao enviar avaliação. Tente novamente.');
       }
@@ -155,16 +166,76 @@ export default function ReviewsSection() {
                   "{rev.comment}"
                 </p>
 
-                {/* Customer Real Photo if available */}
-                {rev.photoUrl && (
-                  <div className="w-full h-44 rounded-2xl overflow-hidden border border-atelier-100 bg-atelier-50">
-                    <img
-                      src={rev.photoUrl}
-                      alt={`Foto enviada por ${rev.name}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+                {/* Customer Real Photo(s) - Up to 3 photos */}
+                {(() => {
+                  const allPhotos = (rev.photos && rev.photos.length) ? rev.photos : (rev.photoUrl ? [rev.photoUrl] : []);
+                  if (!allPhotos.length) return null;
+
+                  if (allPhotos.length === 1) {
+                    return (
+                      <div
+                        onClick={() => setZoomedPhoto(allPhotos[0])}
+                        className="w-full h-44 rounded-2xl overflow-hidden border border-atelier-100 bg-atelier-50 cursor-pointer group relative"
+                        title="Clique para ampliar"
+                      >
+                        <img
+                          src={allPhotos[0]}
+                          alt={`Foto enviada por ${rev.name}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Camera className="w-3 h-3" /> Ampliar
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  if (allPhotos.length === 2) {
+                    return (
+                      <div className="grid grid-cols-2 gap-2 w-full h-44">
+                        {allPhotos.map((p, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => setZoomedPhoto(p)}
+                            className="h-full rounded-2xl overflow-hidden border border-atelier-100 bg-atelier-50 cursor-pointer group relative"
+                            title="Clique para ampliar"
+                          >
+                            <img
+                              src={p}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                              {idx + 1}/2
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-3 gap-1.5 w-full h-36">
+                      {allPhotos.slice(0, 3).map((p, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setZoomedPhoto(p)}
+                          className="h-full rounded-xl overflow-hidden border border-atelier-100 bg-atelier-50 cursor-pointer group relative"
+                          title="Clique para ampliar"
+                        >
+                          <img
+                            src={p}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[8px] font-bold px-1 rounded">
+                            {idx + 1}/3
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Author */}
@@ -295,21 +366,37 @@ export default function ReviewsSection() {
 
                     <div>
                       <label className="block text-xs font-semibold text-atelier-700 mb-1">
-                        Foto Real dos Seus Ímãs (Opcional)
+                        Fotos Reais dos Seus Ímãs (Até 3 Fotos - Opcional)
                       </label>
                       <label className="border border-dashed border-atelier-300 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-atelier-50 text-xs text-atelier-600">
                         <Camera className="w-4 h-4 text-brand" />
-                        <span>{photo ? photo.name : 'Clique para selecionar uma foto'}</span>
+                        <span>{photos.length ? `${photos.length} foto(s) selecionada(s)` : 'Clique para selecionar até 3 fotos'}</span>
                         <input
                           type="file"
+                          multiple
                           accept="image/jpeg,image/png,image/webp"
                           onChange={handlePhotoSelect}
                           className="hidden"
                         />
                       </label>
-                      {photoPreview && (
-                        <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-atelier-200">
-                          <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                      {photoPreviews.length > 0 && (
+                        <div className="flex gap-2 mt-2">
+                          {photoPreviews.map((prev, idx) => (
+                            <div key={idx} className="w-16 h-16 rounded-xl overflow-hidden border border-atelier-200 relative group">
+                              <img src={prev} alt="Preview" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPhotos(photos.filter((_, i) => i !== idx));
+                                  setPhotoPreviews(photoPreviews.filter((_, i) => i !== idx));
+                                }}
+                                className="absolute top-0.5 right-0.5 bg-black/70 text-white rounded-full p-0.5"
+                                title="Remover"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -325,6 +412,28 @@ export default function ReviewsSection() {
                 )}
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* Lightbox / Zoom Modal for Review Photos */}
+        {zoomedPhoto && (
+          <div
+            onClick={() => setZoomedPhoto(null)}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-in fade-in"
+          >
+            <div className="relative max-w-3xl max-h-[90vh] bg-white rounded-2xl overflow-hidden p-1 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setZoomedPhoto(null)}
+                className="absolute top-3 right-3 z-10 p-2 bg-black/70 hover:bg-black text-white rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <img
+                src={zoomedPhoto}
+                alt="Foto ampliada"
+                className="w-full h-auto max-h-[85vh] object-contain rounded-xl"
+              />
             </div>
           </div>
         )}

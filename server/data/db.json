@@ -101,6 +101,35 @@
         "description": "Ímãs retangulares com borda branca retrô e legenda personalizada.",
         "icon": "Camera"
       }
+    ],
+    "addons": [
+      {
+        "id": "addon-caixa-rosa",
+        "name": "Caixa de Presente Rosa com Palha",
+        "price": 2.50,
+        "imageUrl": "/uploads/cleyson-1.jpg",
+        "sheetItemName": "Caixas",
+        "description": "Caixa cartonada rosa com forro de papel palha para presentear com elegância.",
+        "active": true
+      },
+      {
+        "id": "addon-sacola-rosa",
+        "name": "Sacola de Cartão Rosa",
+        "price": 1.50,
+        "imageUrl": "/uploads/cleyson-2.jpg",
+        "sheetItemName": "Sacolas de Cartao rosa",
+        "description": "Sacola de papel cartão rosa com alça reforçada, perfeita para entrega.",
+        "active": true
+      },
+      {
+        "id": "addon-saco-organza",
+        "name": "Saco de Organza com Brilho",
+        "price": 1.00,
+        "imageUrl": "",
+        "sheetItemName": "Sacos de organza glitter 5un vár cor",
+        "description": "Saquinho de organza delicado com acabamento brilhante.",
+        "active": true
+      }
     ]
   },
   "admin": {
@@ -109,6 +138,21 @@
   },
   "orders": [],
   "reviews": [
+    {
+      "id": "rev-cleyson",
+      "name": "cleyson almeida",
+      "rating": 5,
+      "comment": "Excelente trabalho! Ficamos encantados com tamanho capricho",
+      "origin": "google",
+      "badge": "Avaliação no Google",
+      "photoUrl": "/uploads/cleyson-1.jpg",
+      "photos": [
+        "/uploads/cleyson-1.jpg",
+        "/uploads/cleyson-2.jpg"
+      ],
+      "status": "approved",
+      "createdAt": "2026-11-24T18:00:00Z"
+    },
     {
       "id": "rev-1",
       "name": "Mariana Silva",

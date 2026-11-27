@@ -232,6 +232,12 @@ const upload = multer({
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB
 });
 
+const uploadMulti = upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'photos', maxCount: 3 },
+  { name: 'image', maxCount: 1 }
+]);
+
 // Admin Auth Middleware
 function authAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -369,7 +375,8 @@ app.post('/api/orders', (req, res) => {
       shippingType,
       estimatedDays,
       address,
-      items
+      items,
+      packaging
     } = req.body;
 
     if (!items || !items.length) {
@@ -385,6 +392,9 @@ app.post('/api/orders', (req, res) => {
       attempts++;
     } while (db.orders.some(o => o.code === code) && attempts < 100);
 
+    const packagingFee = packaging ? (Number(packaging.price) || 0) : 0;
+    const grandTotal = (Number(subtotal) || 0) + (Number(shippingFee) || 0) + packagingFee;
+
     const newOrder = {
       id: `ord_${Date.now()}`,
       code,
@@ -394,10 +404,17 @@ app.post('/api/orders', (req, res) => {
       kitName: kitName || `${items.length} Bótons Ímãs`,
       quantity: Number(quantity) || items.length,
       subtotal: Number(subtotal) || 0,
+      packaging: packaging ? {
+        id: sanitizeText(packaging.id),
+        name: sanitizeText(packaging.name),
+        price: packagingFee,
+        sheetItemName: packaging.sheetItemName ? sanitizeText(packaging.sheetItemName) : ''
+      } : null,
+      packagingFee,
       shippingFee: Number(shippingFee) || 0,
       shippingType: sanitizeText(shippingType) || 'CTT Correio Verde',
       estimatedDays: Number(estimatedDays) || db.settings.productionDays || 2,
-      total: (Number(subtotal) || 0) + (Number(shippingFee) || 0),
+      total: grandTotal,
       currency: '€',
       address: address ? {
         postalCode: sanitizeText(address.postalCode || address.cep),
@@ -437,6 +454,11 @@ app.post('/api/orders', (req, res) => {
       { item: 'Insumos', quantity: totalUnits },
       { item: 'Plástico Laminador', quantity: totalUnits }
     ];
+
+    // Se o cliente escolheu embalagem de presente (Caixa, Sacola, etc.), dá baixa de 1 unidade
+    if (newOrder.packaging?.sheetItemName) {
+      itemsToDeduct.push({ item: newOrder.packaging.sheetItemName, quantity: 1 });
+    }
 
     (async () => {
       for (const d of itemsToDeduct) {
@@ -538,7 +560,7 @@ app.delete('/api/admin/orders/:code', authAdmin, (req, res) => {
 });
 
 // 11. Reviews: Submit Review (Public, enters as pending)
-app.post('/api/reviews', upload.single('photo'), (req, res) => {
+app.post('/api/reviews', uploadMulti, (req, res) => {
   try {
     const db = getDb();
     const { name, rating, comment } = req.body;
@@ -547,7 +569,10 @@ app.post('/api/reviews', upload.single('photo'), (req, res) => {
       return res.status(400).json({ error: 'Preencha o seu nome, classificação e comentário.' });
     }
 
-    const photoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const uploadedFiles = (req.files?.photos || []).concat(req.files?.photo || []).concat(req.files?.image || []);
+    if (req.file) uploadedFiles.push(req.file);
+    const photos = uploadedFiles.map(f => `/uploads/${f.filename}`);
+    const photoUrl = photos[0] || null;
 
     const newReview = {
       id: `rev_${Date.now()}`,
@@ -555,6 +580,7 @@ app.post('/api/reviews', upload.single('photo'), (req, res) => {
       rating: Math.min(5, Math.max(1, Number(rating) || 5)),
       comment: sanitizeText(comment),
       photoUrl,
+      photos,
       status: 'pending',
       createdAt: new Date().toISOString()
     };
@@ -605,7 +631,7 @@ app.patch('/api/admin/reviews/:id/status', authAdmin, (req, res) => {
 });
 
 // 15. Reviews: Admin Create Pre-Approved Review (e.g. from Google Reviews)
-app.post('/api/admin/reviews', authAdmin, upload.single('photo'), (req, res) => {
+app.post('/api/admin/reviews', authAdmin, uploadMulti, (req, res) => {
   try {
     const db = getDb();
     const { name, rating, comment, origin, badge, photoUrl: directPhotoUrl } = req.body;
@@ -614,7 +640,11 @@ app.post('/api/admin/reviews', authAdmin, upload.single('photo'), (req, res) => 
       return res.status(400).json({ error: 'Preencha o nome do cliente, classificação e comentário.' });
     }
 
-    const photoUrl = req.file ? `/uploads/${req.file.filename}` : (directPhotoUrl ? sanitizeText(directPhotoUrl) : null);
+    const uploadedFiles = (req.files?.photos || []).concat(req.files?.photo || []).concat(req.files?.image || []);
+    if (req.file) uploadedFiles.push(req.file);
+    const photos = uploadedFiles.map(f => `/uploads/${f.filename}`);
+    if (directPhotoUrl && !photos.length) photos.push(sanitizeText(directPhotoUrl));
+    const photoUrl = photos[0] || null;
 
     const newReview = {
       id: `rev_${Date.now()}`,
@@ -622,6 +652,7 @@ app.post('/api/admin/reviews', authAdmin, upload.single('photo'), (req, res) => 
       rating: Math.min(5, Math.max(1, Number(rating) || 5)),
       comment: sanitizeText(comment),
       photoUrl,
+      photos,
       origin: origin ? sanitizeText(origin) : 'google', // 'google' | 'loja'
       badge: badge ? sanitizeText(badge) : (origin === 'google' ? 'Avaliação no Google' : 'Compra Verificada'),
       status: 'approved',
@@ -736,6 +767,75 @@ app.post('/api/admin/stock/deduct', authAdmin, async (req, res) => {
     console.error('Erro ao dar baixa manual no estoque:', err);
     res.status(500).json({ error: 'Erro ao comunicar com o Google Apps Script: ' + err.message });
   }
+});
+
+// 19. Addons: Get Active Addons (Public)
+app.get('/api/addons', (req, res) => {
+  const db = getDb();
+  const addons = (db.settings?.addons || []).filter(a => a.active !== false);
+  res.json(addons);
+});
+
+// 20. Addons: Admin Add New Addon / Packaging
+app.post('/api/admin/addons', authAdmin, upload.single('image'), (req, res) => {
+  try {
+    const db = getDb();
+    const { name, price, sheetItemName, description, imageUrl: directImageUrl } = req.body;
+
+    if (!name || price === undefined) {
+      return res.status(400).json({ error: 'Informe o nome e o preço do produto adicional.' });
+    }
+
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : (directImageUrl ? sanitizeText(directImageUrl) : '');
+
+    if (!db.settings.addons) db.settings.addons = [];
+
+    const newAddon = {
+      id: `addon_${Date.now()}`,
+      name: sanitizeText(name),
+      price: Number(price) || 0,
+      imageUrl,
+      sheetItemName: sheetItemName ? sanitizeText(sheetItemName) : '',
+      description: description ? sanitizeText(description) : '',
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+
+    db.settings.addons.push(newAddon);
+    saveDb(db);
+
+    res.json({ success: true, addon: newAddon, message: 'Produto adicional cadastrado com sucesso!' });
+  } catch (err) {
+    console.error('Error adding addon:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar produto adicional.' });
+  }
+});
+
+// 21. Addons: Admin Delete Addon
+app.delete('/api/admin/addons/:id', authAdmin, (req, res) => {
+  const db = getDb();
+  if (db.settings.addons) {
+    db.settings.addons = db.settings.addons.filter(a => a.id !== req.params.id);
+    saveDb(db);
+  }
+  res.json({ success: true });
+});
+
+// 22. Addons: Admin Toggle / Update Addon
+app.patch('/api/admin/addons/:id', authAdmin, (req, res) => {
+  const db = getDb();
+  const addon = (db.settings?.addons || []).find(a => a.id === req.params.id);
+  if (!addon) {
+    return res.status(404).json({ error: 'Item não encontrado.' });
+  }
+
+  if (req.body.active !== undefined) addon.active = Boolean(req.body.active);
+  if (req.body.name) addon.name = sanitizeText(req.body.name);
+  if (req.body.price !== undefined) addon.price = Number(req.body.price);
+  if (req.body.sheetItemName !== undefined) addon.sheetItemName = sanitizeText(req.body.sheetItemName);
+
+  saveDb(db);
+  res.json({ success: true, addon });
 });
 
 // 16. Portugal CTT & Google Sheets Shipping Calculator

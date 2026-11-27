@@ -28,7 +28,8 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle2,
-  Shield
+  Shield,
+  Gift
 } from 'lucide-react';
 import A4PrintModal from './A4PrintModal';
 
@@ -59,9 +60,21 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewOrigin, setNewReviewOrigin] = useState('google');
-  const [newReviewPhotoFile, setNewReviewPhotoFile] = useState(null);
-  const [newReviewPhotoPreview, setNewReviewPhotoPreview] = useState(null);
+  const [newReviewPhotoFiles, setNewReviewPhotoFiles] = useState([]);
+  const [newReviewPhotoPreviews, setNewReviewPhotoPreviews] = useState([]);
   const [submittingManualReview, setSubmittingManualReview] = useState(false);
+
+  // Addons / Embalagens & Extras state
+  const [addons, setAddons] = useState([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
+  const [isAddingAddon, setIsAddingAddon] = useState(false);
+  const [newAddonName, setNewAddonName] = useState('');
+  const [newAddonPrice, setNewAddonPrice] = useState('');
+  const [newAddonSheetItem, setNewAddonSheetItem] = useState('');
+  const [newAddonDesc, setNewAddonDesc] = useState('');
+  const [newAddonImageFile, setNewAddonImageFile] = useState(null);
+  const [newAddonImagePreview, setNewAddonImagePreview] = useState(null);
+  const [submittingAddon, setSubmittingAddon] = useState(false);
 
   // Stock state from Google Sheets
   const [stockData, setStockData] = useState(null);
@@ -179,7 +192,7 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
     }
   };
 
-  // Handle create manual review (e.g. Google Reviews)
+  // Handle create manual review (e.g. Google Reviews - up to 3 photos)
   const handleCreateManualReview = async (e) => {
     e.preventDefault();
     if (!newReviewName.trim() || !newReviewComment.trim()) {
@@ -194,8 +207,9 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
       formData.append('comment', newReviewComment.trim());
       formData.append('origin', newReviewOrigin);
       formData.append('badge', newReviewOrigin === 'google' ? 'Avaliação no Google' : 'Compra Verificada');
-      if (newReviewPhotoFile) {
-        formData.append('photo', newReviewPhotoFile);
+      if (newReviewPhotoFiles && newReviewPhotoFiles.length > 0) {
+        newReviewPhotoFiles.forEach((f) => formData.append('photos', f));
+        formData.append('photo', newReviewPhotoFiles[0]);
       }
 
       const res = await fetch('/api/admin/reviews', {
@@ -208,8 +222,8 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
         setNewReviewName('');
         setNewReviewRating(5);
         setNewReviewComment('');
-        setNewReviewPhotoFile(null);
-        setNewReviewPhotoPreview(null);
+        setNewReviewPhotoFiles([]);
+        setNewReviewPhotoPreviews([]);
         setIsAddingReview(false);
         fetchReviews(token);
         alert('Avaliação adicionada com sucesso e já publicada no site!');
@@ -224,12 +238,106 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
     }
   };
 
+  // Addons / Embalagens handlers
+  const fetchAddons = async () => {
+    setLoadingAddons(true);
+    try {
+      const res = await fetch('/api/addons');
+      if (res.ok) {
+        const data = await res.json();
+        setAddons(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Error fetching addons:', err);
+    } finally {
+      setLoadingAddons(false);
+    }
+  };
+
+  const handleAddAddon = async (e) => {
+    e.preventDefault();
+    if (!newAddonName.trim()) {
+      alert('Informe o nome da embalagem ou produto adicional.');
+      return;
+    }
+    setSubmittingAddon(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', newAddonName.trim());
+      formData.append('price', Number(newAddonPrice) || 0);
+      if (newAddonSheetItem) formData.append('sheetItemName', newAddonSheetItem.trim());
+      if (newAddonDesc) formData.append('description', newAddonDesc.trim());
+      if (newAddonImageFile) formData.append('image', newAddonImageFile);
+
+      const res = await fetch('/api/admin/addons', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        setNewAddonName('');
+        setNewAddonPrice('');
+        setNewAddonSheetItem('');
+        setNewAddonDesc('');
+        setNewAddonImageFile(null);
+        setNewAddonImagePreview(null);
+        setIsAddingAddon(false);
+        fetchAddons();
+        alert('Embalagem / Produto Adicional guardado com sucesso!');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Erro ao guardar item adicional.');
+      }
+    } catch (err) {
+      alert('Erro de conexão ao guardar: ' + err.message);
+    } finally {
+      setSubmittingAddon(false);
+    }
+  };
+
+  const handleDeleteAddon = async (id) => {
+    if (!confirm('Deseja realmente remover esta embalagem / produto adicional?')) return;
+    try {
+      const res = await fetch(`/api/admin/addons/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setAddons((prev) => prev.filter((a) => a.id !== id));
+      } else {
+        alert('Erro ao excluir item.');
+      }
+    } catch (err) {
+      alert('Erro de conexão: ' + err.message);
+    }
+  };
+
+  const handleToggleAddon = async (id, currentActive) => {
+    try {
+      const res = await fetch(`/api/admin/addons/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ active: !currentActive })
+      });
+      if (res.ok) {
+        fetchAddons();
+      }
+    } catch (err) {
+      console.error('Error toggling addon:', err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchOrders(token);
       fetchReviews(token);
       fetchSettings();
       fetchStock(token);
+      fetchAddons();
     }
   }, [token]);
 
@@ -257,6 +365,8 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
         fetchOrders(data.token);
         fetchReviews(data.token);
         fetchSettings();
+        fetchStock(data.token);
+        fetchAddons();
       } else {
         const err = await res.json().catch(() => ({}));
         setLoginError(err.error || 'Utilizador ou palavra-passe incorretos.');
@@ -542,6 +652,22 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                 <Boxes className="w-4 h-4 shrink-0" />
                 <span>Estoque Sheets ({stockData?.summary?.totalItems || 34})</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('addons');
+                  fetchAddons();
+                  fetchStock();
+                }}
+                className={`py-2 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'addons'
+                    ? 'bg-brand text-atelier-50 shadow-xs'
+                    : 'hover:bg-atelier-100 text-atelier-700'
+                }`}
+              >
+                <Gift className="w-4 h-4 shrink-0" />
+                <span>Embalagens & Extras ({addons.length})</span>
+              </button>
             </div>
 
             {/* Tab 1: Orders Management & Easy 1-Click Print */}
@@ -804,48 +930,73 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-atelier-700 mb-1">
-                        Foto do Produto / Cliente (Opcional)
-                      </label>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <label className="px-3.5 py-2 rounded-xl bg-white border border-atelier-300 hover:bg-atelier-100 text-xs text-atelier-700 font-semibold flex items-center gap-2 cursor-pointer shadow-xs">
-                          <Upload className="w-3.5 h-3.5 text-brand" />
-                          <span>Selecionar Imagem do Computador</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                setNewReviewPhotoFile(file);
-                                const reader = new FileReader();
-                                reader.onload = (ev) => setNewReviewPhotoPreview(ev.target.result);
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-atelier-700">
+                          Fotos Reais do Produto / Cliente (Até 3 fotos)
                         </label>
+                        <span className="text-[10px] text-atelier-500 font-medium">
+                          {newReviewPhotoFiles.length}/3 fotos
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {newReviewPhotoFiles.length < 3 && (
+                          <label className="px-3.5 py-2 rounded-xl bg-white border border-atelier-300 hover:bg-atelier-100 text-xs text-atelier-700 font-semibold inline-flex items-center gap-2 cursor-pointer shadow-xs">
+                            <Upload className="w-3.5 h-3.5 text-brand" />
+                            <span>{newReviewPhotoFiles.length === 0 ? 'Selecionar Fotos (Máx. 3)' : '+ Adicionar Mais Foto'}</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files) {
+                                  const incoming = Array.from(e.target.files);
+                                  const remaining = 3 - newReviewPhotoFiles.length;
+                                  const toAdd = incoming.slice(0, remaining);
+                                  if (toAdd.length === 0) return;
 
-                        {newReviewPhotoPreview && (
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-atelier-300">
-                              <img
-                                src={newReviewPhotoPreview}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setNewReviewPhotoFile(null);
-                                setNewReviewPhotoPreview(null);
+                                  const updatedFiles = [...newReviewPhotoFiles, ...toAdd];
+                                  setNewReviewPhotoFiles(updatedFiles);
+
+                                  toAdd.forEach((file) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                      setNewReviewPhotoPreviews((prev) => [...prev, ev.target.result]);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  });
+                                }
                               }}
-                              className="text-[11px] text-rose-600 hover:underline cursor-pointer"
-                            >
-                              Remover foto
-                            </button>
+                            />
+                          </label>
+                        )}
+
+                        {newReviewPhotoPreviews.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {newReviewPhotoPreviews.map((preview, idx) => (
+                              <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-atelier-300 bg-atelier-50 shadow-2xs group">
+                                <img
+                                  src={preview}
+                                  alt={`Foto ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNewReviewPhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+                                    setNewReviewPhotoPreviews((prev) => prev.filter((_, i) => i !== idx));
+                                  }}
+                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition-colors cursor-pointer"
+                                  title="Remover esta foto"
+                                >
+                                  ✕
+                                </button>
+                                <span className="absolute bottom-1 left-1 px-1 rounded bg-black/60 text-[9px] text-white font-mono">
+                                  {idx + 1}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -1375,6 +1526,286 @@ export default function AdminPanel({ isOpen, onClose, onSettingsUpdated }) {
                     })()}
                   </div>
                 )}
+
+              </div>
+            )}
+
+            {/* Tab 5: Addons / Embalagens & Extras Management */}
+            {activeTab === 'addons' && (
+              <div className="p-3 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div>
+                    <h4 className="font-serif font-bold text-sm sm:text-base text-brand-dark flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-brand" />
+                      <span>Embalagens & Produtos Adicionais (Extras)</span>
+                    </h4>
+                    <p className="text-[11px] text-atelier-500">
+                      Cadastre sacolas, caixas de presente e mimos para o cliente escolher na sacola com valor adicional.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setIsAddingAddon(!isAddingAddon)}
+                    className="px-3.5 py-2 bg-brand hover:bg-brand-dark text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{isAddingAddon ? 'Fechar Formulário' : '+ Nova Embalagem / Adicional'}</span>
+                  </button>
+                </div>
+
+                {/* Form to Add New Addon / Packaging */}
+                {isAddingAddon && (
+                  <form
+                    onSubmit={handleAddAddon}
+                    className="p-4 bg-atelier-50/80 rounded-2xl border border-atelier-200 space-y-3 animate-in fade-in duration-200"
+                  >
+                    <div className="flex items-center justify-between border-b border-atelier-200/80 pb-2">
+                      <span className="font-bold text-xs text-brand-dark flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5 text-brand" />
+                        Cadastrar Nova Embalagem ou Produto Adicional
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingAddon(false)}
+                        className="text-atelier-400 hover:text-atelier-600 text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                          Nome do Produto / Embalagem *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: Caixa de Presente com Palha Rosa"
+                          value={newAddonName}
+                          onChange={(e) => setNewAddonName(e.target.value)}
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                          Valor Adicional (€) *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          required
+                          placeholder="Ex: 2.50"
+                          value={newAddonPrice}
+                          onChange={(e) => setNewAddonPrice(e.target.value)}
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                          Vincular Linha da Planilha (Estoque Sheets)
+                        </label>
+                        <select
+                          value={newAddonSheetItem}
+                          onChange={(e) => setNewAddonSheetItem(e.target.value)}
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                        >
+                          <option value="">-- Selecione um item da aba Estoque (Opcional) --</option>
+                          <option value="Caixas">Caixas (Linha 12)</option>
+                          <option value="Sacolas de Cartao rosa">Sacolas de Cartao rosa (Linha 13)</option>
+                          <option value="Sacos de organza glitter 5un vár cor">Sacos de organza glitter (Linha 14)</option>
+                          <option value="Plástico Laminador">Plástico Laminador (Linha 17)</option>
+                          <option value="Insumos">Insumos (Linha 24)</option>
+                          {stockData?.items && stockData.items.map((it) => (
+                            <option key={it.row} value={it.name}>
+                              {it.name} (Atual: {it.currentStock} un.)
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-[10px] text-atelier-500 mt-1">
+                          Toda vez que o cliente pedir este item, o sistema dará baixa automática de 1 unidade na sua planilha.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                          Descrição Rápida (Aparece no carrinho)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Caixa rígida de presente com palha decorativa e laço"
+                          value={newAddonDesc}
+                          onChange={(e) => setNewAddonDesc(e.target.value)}
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-atelier-300 bg-white focus:outline-none focus:border-brand"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-atelier-700 mb-1">
+                        Foto da Embalagem / Produto
+                      </label>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <label className="px-3.5 py-2 rounded-xl bg-white border border-atelier-300 hover:bg-atelier-100 text-xs text-atelier-700 font-semibold flex items-center gap-2 cursor-pointer shadow-xs">
+                          <Upload className="w-3.5 h-3.5 text-brand" />
+                          <span>Carregar Foto do Computador</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                setNewAddonImageFile(file);
+                                const reader = new FileReader();
+                                reader.onload = (ev) => setNewAddonImagePreview(ev.target.result);
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+
+                        {newAddonImagePreview && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-atelier-300">
+                              <img
+                                src={newAddonImagePreview}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNewAddonImageFile(null);
+                                setNewAddonImagePreview(null);
+                              }}
+                              className="text-[11px] text-rose-600 hover:underline cursor-pointer"
+                            >
+                              Remover foto
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-atelier-200">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingAddon(false)}
+                        className="px-4 py-2 text-xs font-semibold text-atelier-600 hover:bg-atelier-200/50 rounded-xl cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submittingAddon}
+                        className="px-5 py-2 bg-brand hover:bg-brand-dark disabled:bg-atelier-300 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>{submittingAddon ? 'A guardar...' : 'Guardar Embalagem / Adicional'}</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List of Registered Addons */}
+                <div className="space-y-3">
+                  {loadingAddons ? (
+                    <div className="p-8 text-center text-xs text-atelier-500">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-brand" />
+                      A carregar produtos adicionais...
+                    </div>
+                  ) : addons.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-atelier-500 bg-atelier-50 rounded-2xl border border-atelier-200">
+                      <Gift className="w-8 h-8 text-atelier-300 mx-auto mb-2" />
+                      Nenhuma embalagem ou adicional cadastrado ainda. Clique no botão acima para adicionar a primeira opção!
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {addons.map((addon) => (
+                        <div
+                          key={addon.id}
+                          className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
+                            addon.active !== false
+                              ? 'bg-white border-atelier-200 shadow-xs'
+                              : 'bg-atelier-100/60 border-atelier-300 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {addon.imageUrl ? (
+                              <img
+                                src={addon.imageUrl}
+                                alt={addon.name}
+                                className="w-16 h-16 rounded-xl object-cover border border-atelier-200 shrink-0 shadow-2xs"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-xl bg-brand-cream text-brand flex items-center justify-center shrink-0 border border-brand/10">
+                                <Gift className="w-7 h-7" />
+                              </div>
+                            )}
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <h5 className="font-bold text-xs text-brand-dark truncate">{addon.name}</h5>
+                                <span className="font-bold text-xs text-brand bg-brand-cream/60 px-2 py-0.5 rounded-md shrink-0">
+                                  +{Number(addon.price).toFixed(2).replace('.', ',')} €
+                                </span>
+                              </div>
+
+                              {addon.description && (
+                                <p className="text-[11px] text-atelier-600 line-clamp-2 mt-0.5 leading-snug">
+                                  {addon.description}
+                                </p>
+                              )}
+
+                              {addon.sheetItemName ? (
+                                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 w-fit">
+                                  <Boxes className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span>Vinculado ao Sheets: <strong>{addon.sheetItemName}</strong></span>
+                                </div>
+                              ) : (
+                                <div className="mt-1.5 text-[10px] text-atelier-400">
+                                  Sem baixa automática vinculada
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-atelier-100 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAddon(addon.id, addon.active !== false)}
+                              className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
+                                addon.active !== false
+                                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                  : 'bg-atelier-200 text-atelier-600 hover:bg-atelier-300'
+                              }`}
+                            >
+                              {addon.active !== false ? '● Ativo no Site' : '○ Pausado'}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAddon(addon.id)}
+                              className="p-1.5 text-atelier-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Excluir embalagem"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
               </div>
             )}
